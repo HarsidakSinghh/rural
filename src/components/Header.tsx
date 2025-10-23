@@ -38,20 +38,21 @@ const Header: React.FC = () => {
     }
   };
 
+  // ✅ use isActive for highlighting current route
   const isActive = (path: string) => location.pathname === path;
 
   const renderNavigation = () => {
     if (!isAuthenticated) {
       return (
         <>
-          <Link to="/" className="nav-link">
+          <Link to="/" className={`nav-link ${isActive('/') ? 'active' : ''}`}>
             {t('home')}
           </Link>
-          <Link to="/login" className="nav-link">
+          <Link to="/login" className={`nav-link ${isActive('/login') ? 'active' : ''}`}>
             <LogIn size={16} />
             {t('login')}
           </Link>
-          <Link to="/register" className="nav-link">
+          <Link to="/register" className={`nav-link ${isActive('/register') ? 'active' : ''}`}>
             <UserPlus size={16} />
             {t('register')}
           </Link>
@@ -62,7 +63,7 @@ const Header: React.FC = () => {
     if (isAdmin) {
       return (
         <>
-          <Link to="/admin" className="nav-link">
+          <Link to="/admin" className={`nav-link ${isActive('/admin') ? 'active' : ''}`}>
             <Shield size={16} />
             {t('dashboard')}
           </Link>
@@ -73,17 +74,17 @@ const Header: React.FC = () => {
     if (isReporter) {
       return (
         <>
-          <Link to="/" className="nav-link">
+          <Link to="/" className={`nav-link ${isActive('/') ? 'active' : ''}`}>
             {t('home')}
           </Link>
-          <Link to="/submit" className="nav-link">
+          <Link to="/submit" className={`nav-link ${isActive('/submit') ? 'active' : ''}`}>
             {t('submit_news')}
           </Link>
-          <Link to="/live" className="nav-link">
+          <Link to="/live" className={`nav-link ${isActive('/live') ? 'active' : ''}`}>
             <Video size={16} />
             {t('go_live')}
           </Link>
-          <Link to="/profile" className="nav-link">
+          <Link to="/profile" className={`nav-link ${isActive('/profile') ? 'active' : ''}`}>
             <User size={16} />
             {t('profile')}
           </Link>
