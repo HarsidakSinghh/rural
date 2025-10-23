@@ -1,25 +1,43 @@
 import React from 'react';
-import logo from './logo.svg';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { LanguageProvider } from './contexts/LanguageContext';
+import { AuthProvider } from './contexts/AuthContext';
+import Header from './components/Header';
+import Home from './pages/Home';
+import SubmitNews from './pages/SubmitNews';
+import NewsDetail from './pages/NewsDetail';
+import AdminDashboard from './pages/AdminDashboard';
+import UserProfile from './pages/UserProfile';
+import LiveVideo from './pages/LiveVideo';
+import Register from './pages/Register';
+import Login from './pages/Login';
 import './App.css';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <LanguageProvider>
+      <AuthProvider>
+        <Router>
+          <div className="App">
+            <Header />
+            <main className="main-content">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/submit" element={<SubmitNews />} />
+                <Route path="/news/:id" element={<NewsDetail />} />
+                <Route path="/profile" element={<UserProfile />} />
+                <Route path="/live" element={<LiveVideo />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                {/* Admin redirect - admins go directly to dashboard */}
+                <Route path="/admin-home" element={<Navigate to="/admin" replace />} />
+              </Routes>
+            </main>
+          </div>
+        </Router>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }
 
