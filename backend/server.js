@@ -41,13 +41,25 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/user', userRoutes);
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    version: '1.0.0',
-    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'
-  });
+app.get('/api/health', async (req, res) => {
+  try {
+    // Ensure DB connection before checking
+    await connectDB();
+    res.json({
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      version: '1.0.0',
+      database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'
+    });
+  } catch (error) {
+    res.json({
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      version: '1.0.0',
+      database: 'Disconnected',
+      error: error.message
+    });
+  }
 });
 
 // Error handling middleware
@@ -78,6 +90,8 @@ async function connectDB() {
 
   if (!cached.promise) {
     const opts = {
+      serverSelectionTimeoutMS: 5000, // 5 seconds
+      connectTimeoutMS: 10000, // 10 seconds
       bufferCommands: false,
     };
 
