@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { NewsArticle } from '../types';
 import { MapPin, Calendar, User, Eye, ArrowLeft, FileText, Tag, MapPin as MapPinIcon } from 'lucide-react';
+import apiService from '../services/api';
 
 // Mock data
 const mockArticle: NewsArticle = {
@@ -38,9 +39,30 @@ The implementation is being monitored by a committee comprising village represen
 const NewsDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { t } = useLanguage();
+  const [article, setArticle] = useState<NewsArticle | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  // In a real app, you'd fetch the article by ID
-  const article = mockArticle;
+  useEffect(() => {
+    const fetchArticle = async () => {
+      if (!id) return;
+      
+      try {
+        setLoading(true);
+        const response = await apiService.getNewsById(id);
+        setArticle(response.news);
+      } catch (error) {
+        console.error('Failed to fetch article:', error);
+        setError('Failed to load article');
+        // Fallback to mock data
+        setArticle(mockArticle);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchArticle();
+  }, [id]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -61,18 +83,34 @@ const NewsDetail: React.FC = () => {
       case 'issue': return 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
       case 'event': return 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
       case 'news': return 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)';
+      case 'agriculture': return 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)';
+      case 'education': return 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)';
+      case 'health': return 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+      case 'infrastructure': return 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)';
+      case 'other': return 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)';
       default: return 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)';
     }
   };
 
-  if (!article) {
+  if (loading) {
+    return (
+      <div className="news-detail-page">
+        <div className="loading-container">
+          <div className="loading-spinner" />
+          <p>{t('loading')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !article) {
     return (
       <div className="article-not-found">
         <div className="not-found-card">
           <div className="not-found-icon">
             <FileText size={48} />
           </div>
-          <h2 className="not-found-title">{t('article_not_found')}</h2>
+          <h2 className="not-found-title">{error || t('article_not_found')}</h2>
           <p className="not-found-message">{t('article_not_found_message')}</p>
           <Link to="/" className="btn btn-primary">
             <ArrowLeft size={16} />
@@ -117,7 +155,7 @@ const NewsDetail: React.FC = () => {
             <div className="article-meta">
               <div className="meta-item">
                 <User size={16} />
-                <span>{article.author}</span>
+                <span>{typeof article.author === 'object' && article.author ? article.author.name : article.author}</span>
               </div>
               <div className="meta-item">
                 <Calendar size={16} />

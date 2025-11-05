@@ -4,7 +4,7 @@ export interface NewsArticle {
   content: string;
   category: NewsCategory;
   village: string;
-  author: string;
+  author: string | { name: string; email: string; village: string };
   authorPhone?: string;
   publishedAt: string;
   status: 'pending' | 'published' | 'rejected';
@@ -19,7 +19,7 @@ export interface NewsArticle {
   isGeoTagged: boolean;
 }
 
-export type NewsCategory = 'news' | 'scheme' | 'culture' | 'issue' | 'event';
+export type NewsCategory = 'news' | 'scheme' | 'culture' | 'issue' | 'event' | 'agriculture' | 'education' | 'health' | 'infrastructure' | 'other';
 
 export interface NewsSubmission {
   id: string;

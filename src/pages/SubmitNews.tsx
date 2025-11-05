@@ -1,29 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 import { NewsCategory } from '../types';
 import { Mic, MicOff, MapPin, Upload, FileText, User, Phone, MapPin as MapPinIcon } from 'lucide-react';
+import apiService from '../services/api';
 
 const SubmitNews: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState<NewsCategory>('news');
   const [village, setVillage] = useState('');
-  const [authorName, setAuthorName] = useState('');
-  const [authorPhone, setAuthorPhone] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Auto-fill village from user profile
+  useEffect(() => {
+    if (user?.village) {
+      setVillage(user.village);
+    }
+  }, [user]);
 
   const categories = [
     { value: 'news', label: t('news') },
     { value: 'scheme', label: t('scheme') },
     { value: 'culture', label: t('culture') },
     { value: 'issue', label: t('issue') },
-    { value: 'event', label: t('event') }
+    { value: 'event', label: t('event') },
+    { value: 'agriculture', label: t('agriculture') },
+    { value: 'education', label: t('education') },
+    { value: 'health', label: t('health') },
+    { value: 'infrastructure', label: t('infrastructure') },
+    { value: 'other', label: t('other') }
   ];
 
   const getLocation = () => {
@@ -45,10 +58,26 @@ const SubmitNews: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const newsData = {
+        title,
+        content,
+        category,
+        village: village || user?.village || '',
+        location: location ? {
+          latitude: location.lat,
+          longitude: location.lng
+        } : {
+          latitude: 0,
+          longitude: 0
+        },
+        tags: []
+      };
+
+      await apiService.submitNews(newsData);
       alert(t('submission_success'));
       navigate('/');
     } catch (error) {
+      console.error('Submission error:', error);
       alert(t('submission_error'));
     } finally {
       setIsSubmitting(false);
@@ -125,40 +154,6 @@ const SubmitNews: React.FC = () => {
           </div>
         </div>
 
-        <div className="form-section">
-          <h3 className="section-title">
-            <User size={20} />
-            {t('author_information')}
-          </h3>
-          
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">{t('author_name')} *</label>
-              <input
-                type="text"
-                className="form-input"
-                value={authorName}
-                onChange={(e) => setAuthorName(e.target.value)}
-                placeholder={t('enter_your_name')}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">
-                <Phone size={16} />
-                {t('phone_number')}
-              </label>
-              <input
-                type="tel"
-                className="form-input"
-                value={authorPhone}
-                onChange={(e) => setAuthorPhone(e.target.value)}
-                placeholder={t('enter_phone_number')}
-              />
-            </div>
-          </div>
-        </div>
 
         <div className="form-section">
           <h3 className="section-title">

@@ -1,96 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { NewsSubmission, AdminStats } from '../types';
 import { Eye, Check, X, Edit, Trash2, BarChart3, Shield, Users, FileText, AlertCircle, TrendingUp, MapPin, Tag } from 'lucide-react';
+import apiService from '../services/api';
 
-// Mock data
-const mockSubmissions: NewsSubmission[] = [
-  {
-    id: '1',
-    title: 'New Road Construction in Village',
-    content: 'The government has started construction of a new road connecting our village to the main highway.',
-    category: 'news',
-    village: 'Village A',
-    authorName: 'Ram Singh',
-    authorPhone: '9876543210',
-    submittedAt: '2024-01-15T10:30:00Z',
-    status: 'pending',
-    tags: ['road', 'construction', 'development']
-  },
-  {
-    id: '2',
-    title: 'Traditional Dance Festival',
-    content: 'Annual folk dance festival was celebrated with great enthusiasm in our village.',
-    category: 'culture',
-    village: 'Village B',
-    authorName: 'Priya Sharma',
-    authorPhone: '9876543211',
-    submittedAt: '2024-01-14T16:45:00Z',
-    status: 'approved',
-    tags: ['culture', 'festival', 'tradition']
-  },
-  {
-    id: '3',
-    title: 'Water Supply Issue',
-    content: 'Residents are facing water supply problems for the past week.',
-    category: 'issue',
-    village: 'Village C',
-    authorName: 'Amit Kumar',
-    authorPhone: '9876543212',
-    submittedAt: '2024-01-13T09:15:00Z',
-    status: 'rejected',
-    adminNotes: 'Incomplete information provided',
-    tags: ['water', 'issue', 'complaint']
-  }
-];
 
-const mockStats: AdminStats = {
-  totalSubmissions: 45,
-  pendingReviews: 12,
-  publishedArticles: 28,
-  rejectedArticles: 5,
-  totalVillages: 15,
-  activeReporters: 8,
-  monthlyStats: {
-    month: 'January 2024',
-    submissions: 45,
-    published: 28,
-    rejected: 5,
-    views: 1247,
-    newUsers: 3
-  },
-  dailyStats: [
-    { date: '2024-01-15', submissions: 8, published: 5, views: 156, activeUsers: 12 },
-    { date: '2024-01-14', submissions: 6, published: 4, views: 134, activeUsers: 10 },
-    { date: '2024-01-13', submissions: 7, published: 3, views: 98, activeUsers: 8 },
-    { date: '2024-01-12', submissions: 5, published: 6, views: 167, activeUsers: 15 },
-    { date: '2024-01-11', submissions: 9, published: 2, views: 89, activeUsers: 7 },
-    { date: '2024-01-10', submissions: 4, published: 4, views: 123, activeUsers: 9 },
-    { date: '2024-01-09', submissions: 6, published: 3, views: 145, activeUsers: 11 }
-  ],
-  topVillages: [
-    { village: 'Village A', submissions: 12, published: 8, views: 456, reporters: 3 },
-    { village: 'Village B', submissions: 10, published: 7, views: 389, reporters: 2 },
-    { village: 'Village C', submissions: 8, published: 5, views: 234, reporters: 2 },
-    { village: 'Village D', submissions: 7, published: 4, views: 198, reporters: 1 },
-    { village: 'Village E', submissions: 5, published: 3, views: 156, reporters: 1 }
-  ],
-  categoryBreakdown: [
-    { category: 'news', count: 18, percentage: 40, views: 567 },
-    { category: 'scheme', count: 12, percentage: 27, views: 423 },
-    { category: 'culture', count: 8, percentage: 18, views: 234 },
-    { category: 'issue', count: 4, percentage: 9, views: 156 },
-    { category: 'event', count: 3, percentage: 6, views: 89 }
-  ]
-};
 
 const AdminDashboard: React.FC = () => {
   const { t } = useLanguage();
   const { isAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState<'overview' | 'pending' | 'published' | 'rejected'>('overview');
-  const [submissions, setSubmissions] = useState<NewsSubmission[]>(mockSubmissions);
-  const [stats] = useState<AdminStats>(mockStats);
+  const [submissions, setSubmissions] = useState<NewsSubmission[]>([]);
+  const [stats, setStats] = useState<AdminStats>({
+    totalSubmissions: 0,
+    pendingReviews: 0,
+    publishedArticles: 0,
+    rejectedArticles: 0,
+    totalVillages: 0,
+    activeReporters: 0,
+    monthlyStats: {
+      month: '',
+      submissions: 0,
+      published: 0,
+      rejected: 0,
+      views: 0,
+      newUsers: 0
+    },
+    dailyStats: [],
+    topVillages: [],
+    categoryBreakdown: []
+  });
+  const [loading, setLoading] = useState(true);
+
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const [statsResponse, submissionsResponse] = await Promise.all([
+          apiService.getDashboardStats(),
+          apiService.getAllSubmissions()
+        ]);
+
+        setStats(statsResponse);
+        setSubmissions(submissionsResponse.submissions || []);
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+        // Keep empty state (0 values) when API fails
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isAdmin) {
+      fetchDashboardData();
+    }
+  }, [isAdmin]);
 
   if (!isAdmin) {
     return (
@@ -106,16 +72,31 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
-  const handleApprove = (id: string) => {
-    setSubmissions(submissions.map(sub => 
-      sub.id === id ? { ...sub, status: 'approved' as const } : sub
-    ));
+  const handleApprove = async (id: string) => {
+    try {
+      await apiService.approveNews(id);
+      setSubmissions(submissions.map(sub => 
+        sub.id === id ? { ...sub, status: 'approved' as const } : sub
+      ));
+    } catch (error) {
+      console.error('Failed to approve news:', error);
+      alert('Failed to approve news');
+    }
   };
 
-  const handleReject = (id: string) => {
-    setSubmissions(submissions.map(sub => 
-      sub.id === id ? { ...sub, status: 'rejected' as const } : sub
-    ));
+  const handleReject = async (id: string) => {
+    const reason = prompt('Please provide a reason for rejection:');
+    if (!reason) return;
+    
+    try {
+      await apiService.rejectNews(id, reason);
+      setSubmissions(submissions.map(sub => 
+        sub.id === id ? { ...sub, status: 'rejected' as const, adminNotes: reason } : sub
+      ));
+    } catch (error) {
+      console.error('Failed to reject news:', error);
+      alert('Failed to reject news');
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -147,6 +128,17 @@ const AdminDashboard: React.FC = () => {
     if (activeTab === 'overview') return true;
     return sub.status === activeTab;
   });
+
+  if (loading) {
+    return (
+      <div className="admin-dashboard">
+        <div className="loading-container">
+          <div className="loading-spinner" />
+          <p>{t('loading')}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-dashboard">
@@ -417,7 +409,10 @@ const AdminDashboard: React.FC = () => {
               )}
 
               <div className="submission-actions">
-                <button className="btn btn-secondary action-btn">
+                <button
+                  onClick={() => window.open(`/news/${submission.id}`, '_blank')}
+                  className="btn btn-secondary action-btn"
+                >
                   <Eye size={16} />
                   {t('view')}
                 </button>

@@ -10,7 +10,7 @@ const PREDEFINED_ACCOUNTS = {
   admin: {
     id: 'admin-001',
     name: 'Admin User',
-    email: 'admin@ruralnews.com',
+    email: 'admin@example.com',
     phone: '9876543210',
     village: 'Admin Village',
     password: 'admin123',
@@ -20,11 +20,11 @@ const PREDEFINED_ACCOUNTS = {
   },
   reporter1: {
     id: 'reporter-001',
-    name: 'Rajesh Kumar',
-    email: 'rajesh@ruralnews.com',
+    name: 'Ram Singh',
+    email: 'ram.singh@example.com',
     phone: '9876543211',
     village: 'Village A',
-    password: 'reporter123',
+    password: 'password123',
     role: 'reporter',
     isTrusted: true,
     approvedSubmissions: 25
@@ -32,10 +32,10 @@ const PREDEFINED_ACCOUNTS = {
   reporter2: {
     id: 'reporter-002',
     name: 'Priya Sharma',
-    email: 'priya@ruralnews.com',
+    email: 'priya.sharma@example.com',
     phone: '9876543212',
     village: 'Village B',
-    password: 'reporter123',
+    password: 'password123',
     role: 'reporter',
     isTrusted: false,
     approvedSubmissions: 5
@@ -77,7 +77,7 @@ router.post('/register', [
     await user.save();
 
     // Generate token
-    const token = generateToken(user._id);
+    const token = generateToken(user._id.toString());
 
     res.status(201).json({
       message: 'User registered successfully',
@@ -153,7 +153,7 @@ router.post('/login', [
     user.checkTrustStatus();
     await user.save();
 
-    const token = generateToken(user._id);
+    const token = generateToken(user._id.toString());
 
     res.json({
       message: 'Login successful',

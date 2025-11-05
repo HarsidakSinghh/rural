@@ -1,5 +1,5 @@
 const express = require('express');
-const { body, validationResult } = require('express-validator');
+const { body, validationResult, query } = require('express-validator');
 const User = require('../models/User');
 const News = require('../models/News');
 const { authenticateToken } = require('../middleware/auth');
@@ -9,7 +9,7 @@ const router = express.Router();
 // Get user statistics
 router.get('/stats', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id || req.user._id;
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
@@ -80,22 +80,24 @@ router.get('/stats', authenticateToken, async (req, res) => {
 // Get user's profile with detailed stats
 router.get('/profile', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('-password');
-    
+    const userId = req.user.id || req.user._id;
+    const user = await User.findById(userId).select('-password');
+
     // Get additional stats
-    const totalSubmissions = await News.countDocuments({ author: req.user._id });
-    const approvedSubmissions = await News.countDocuments({ 
-      author: req.user._id, 
-      status: 'approved' 
+    const totalSubmissions = await News.countDocuments({ author: userId });
+    const approvedSubmissions = await News.countDocuments({
+      author: userId,
+      status: 'approved'
     });
     const totalViews = await News.aggregate([
-      { $match: { author: req.user._id } },
+      { $match: { author: userId } },
       { $group: { _id: null, total: { $sum: '$viewCount' } } }
     ]);
 
     res.json({
       user: {
-        id: user._id,
+        _id: user._id.toString(),
+        id: user._id.toString(),
         name: user.name,
         email: user.email,
         phone: user.phone,
@@ -141,8 +143,9 @@ router.put('/profile', authenticateToken, [
     if (bio !== undefined) updateData.bio = bio;
     if (socialLinks) updateData.socialLinks = socialLinks;
 
+    const userId = req.user.id || req.user._id;
     const user = await User.findByIdAndUpdate(
-      req.user._id,
+      userId,
       updateData,
       { new: true, runValidators: true }
     ).select('-password');
@@ -150,7 +153,8 @@ router.put('/profile', authenticateToken, [
     res.json({
       message: 'Profile updated successfully',
       user: {
-        id: user._id,
+        _id: user._id.toString(),
+        id: user._id.toString(),
         name: user.name,
         email: user.email,
         phone: user.phone,
@@ -182,7 +186,7 @@ router.get('/submissions', authenticateToken, [
     const { status, page = 1, limit = 10 } = req.query;
     const skip = (page - 1) * limit;
 
-    const filter = { author: req.user._id };
+    const filter = { author: req.user.id || req.user._id };
     if (status) filter.status = status;
 
     const submissions = await News.find(filter)
@@ -211,7 +215,7 @@ router.get('/submissions', authenticateToken, [
 // Get user's performance metrics
 router.get('/performance', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id || req.user._id;
     const now = new Date();
     const last30Days = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 

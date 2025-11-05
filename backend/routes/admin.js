@@ -15,105 +15,137 @@ router.get('/dashboard', async (req, res) => {
   try {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    // Total counts
-    const totalUsers = await User.countDocuments();
-    const totalNews = await News.countDocuments();
-    const totalViews = await News.aggregate([
-      { $group: { _id: null, total: { $sum: '$viewCount' } } }
-    ]);
+    // Total counts matching AdminStats interface
     const totalSubmissions = await News.countDocuments();
+    const pendingReviews = await News.countDocuments({ status: 'pending' });
+    const publishedArticles = await News.countDocuments({ status: 'approved' });
+    const rejectedArticles = await News.countDocuments({ status: 'rejected' });
 
-    // Monthly statistics
-    const monthlyUsers = await User.countDocuments({
-      createdAt: { $gte: startOfMonth }
-    });
-    const monthlyNews = await News.countDocuments({
-      createdAt: { $gte: startOfMonth }
-    });
-    const monthlySubmissions = await News.countDocuments({
-      createdAt: { $gte: startOfMonth }
-    });
-    const monthlyApprovals = await News.countDocuments({
-      status: 'approved',
-      approvedAt: { $gte: startOfMonth }
-    });
+    // Total villages (unique villages from submissions)
+    const totalVillages = await News.distinct('village').then(villages => villages.length);
 
-    // Daily statistics
-    const dailySubmissions = await News.countDocuments({
-      createdAt: { $gte: startOfDay }
-    });
-    const dailyApprovals = await News.countDocuments({
-      status: 'approved',
-      approvedAt: { $gte: startOfDay }
-    });
-    const dailyViews = await News.aggregate([
-      { $match: { publishedAt: { $gte: startOfDay } } },
-      { $group: { _id: null, total: { $sum: '$viewCount' } } }
-    ]);
-
-    // Pending submissions
-    const pendingSubmissions = await News.countDocuments({ status: 'pending' });
-    const rejectedSubmissions = await News.countDocuments({ status: 'rejected' });
-
-    // Category breakdown
-    const categoryBreakdown = await News.aggregate([
-      { $group: { _id: '$category', count: { $sum: 1 } } },
-      { $sort: { count: -1 } }
-    ]);
-
-    // Top villages
-    const topVillages = await News.aggregate([
-      { $group: { 
-        _id: '$village', 
-        submissions: { $sum: 1 },
-        views: { $sum: '$viewCount' }
-      }},
-      { $sort: { submissions: -1 } },
-      { $limit: 10 }
-    ]);
-
-    // User statistics
-    const trustedUsers = await User.countDocuments({ isTrusted: true });
-    const activeUsers = await User.countDocuments({ 
+    // Active reporters (users with submissions in last 30 days)
+    const activeReporters = await User.countDocuments({
       lastSubmissionDate: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
     });
 
-    // Approval rate
-    const totalProcessed = await News.countDocuments({ 
-      status: { $in: ['approved', 'rejected'] } 
+    // Monthly statistics
+    const monthlySubmissions = await News.countDocuments({
+      createdAt: { $gte: startOfMonth }
     });
-    const approvalRate = totalProcessed > 0 ? (monthlyApprovals / totalProcessed) * 100 : 0;
+    const monthlyPublished = await News.countDocuments({
+      status: 'approved',
+      approvedAt: { $gte: startOfMonth }
+    });
+    const monthlyRejected = await News.countDocuments({
+      status: 'rejected',
+      rejectedAt: { $gte: startOfMonth }
+    });
+    const monthlyViews = await News.aggregate([
+      { $match: { publishedAt: { $gte: startOfMonth } } },
+      { $group: { _id: null, total: { $sum: '$viewCount' } } }
+    ]);
+    const monthlyNewUsers = await User.countDocuments({
+      createdAt: { $gte: startOfMonth }
+    });
+
+    // Daily statistics for last 7 days
+    const dailyStats = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const endOfDay = new Date(startOfDay);
+      endOfDay.setDate(endOfDay.getDate() + 1);
+
+      const daySubmissions = await News.countDocuments({
+        createdAt: { $gte: startOfDay, $lt: endOfDay }
+      });
+      const dayPublished = await News.countDocuments({
+        status: 'approved',
+        approvedAt: { $gte: startOfDay, $lt: endOfDay }
+      });
+      const dayViews = await News.aggregate([
+        { $match: { publishedAt: { $gte: startOfDay, $lt: endOfDay } } },
+        { $group: { _id: null, total: { $sum: '$viewCount' } } }
+      ]);
+      const dayActiveUsers = await User.countDocuments({
+        lastActive: { $gte: startOfDay, $lt: endOfDay }
+      });
+
+      dailyStats.push({
+        date: startOfDay.toISOString().split('T')[0],
+        submissions: daySubmissions,
+        published: dayPublished,
+        views: dayViews[0]?.total || 0,
+        activeUsers: dayActiveUsers
+      });
+    }
+
+    // Top villages with reporters count
+    const topVillages = await News.aggregate([
+      { $group: {
+        _id: '$village',
+        submissions: { $sum: 1 },
+        published: { $sum: { $cond: [{ $eq: ['$status', 'approved'] }, 1, 0] } },
+        views: { $sum: '$viewCount' }
+      }},
+      { $sort: { submissions: -1 } },
+      { $limit: 5 }
+    ]);
+
+    // Add reporters count for each village
+    for (const village of topVillages) {
+      village.reporters = await User.countDocuments({ village: village._id });
+    }
+
+    // Category breakdown with percentages and views
+    const totalArticles = await News.countDocuments({ status: 'approved' });
+    const categoryBreakdown = await News.aggregate([
+      { $match: { status: 'approved' } },
+      { $group: {
+        _id: '$category',
+        count: { $sum: 1 },
+        views: { $sum: '$viewCount' }
+      }},
+      { $sort: { count: -1 } }
+    ]);
+
+    // Calculate percentages
+    categoryBreakdown.forEach(cat => {
+      cat.percentage = totalArticles > 0 ? Math.round((cat.count / totalArticles) * 100) : 0;
+    });
 
     res.json({
-      overview: {
-        totalUsers,
-        totalNews,
-        totalViews: totalViews[0]?.total || 0,
-        totalSubmissions,
-        pendingSubmissions,
-        rejectedSubmissions
-      },
+      totalSubmissions,
+      pendingReviews,
+      publishedArticles,
+      rejectedArticles,
+      totalVillages,
+      activeReporters,
       monthlyStats: {
-        newUsers: monthlyUsers,
-        newNews: monthlyNews,
+        month: `${startOfMonth.toLocaleString('default', { month: 'long' })} ${startOfMonth.getFullYear()}`,
         submissions: monthlySubmissions,
-        approvals: monthlyApprovals,
-        approvalRate: Math.round(approvalRate * 100) / 100
+        published: monthlyPublished,
+        rejected: monthlyRejected,
+        views: monthlyViews[0]?.total || 0,
+        newUsers: monthlyNewUsers
       },
-      dailyStats: {
-        submissions: dailySubmissions,
-        approvals: dailyApprovals,
-        views: dailyViews[0]?.total || 0
-      },
-      categoryBreakdown,
-      topVillages,
-      userStats: {
-        totalUsers,
-        trustedUsers,
-        activeUsers
-      }
+      dailyStats,
+      topVillages: topVillages.map(v => ({
+        village: v._id,
+        submissions: v.submissions,
+        published: v.published,
+        views: v.views,
+        reporters: v.reporters
+      })),
+      categoryBreakdown: categoryBreakdown.map(c => ({
+        category: c._id,
+        count: c.count,
+        percentage: c.percentage,
+        views: c.views
+      }))
     });
   } catch (error) {
     console.error('Dashboard error:', error);
@@ -121,7 +153,64 @@ router.get('/dashboard', async (req, res) => {
   }
 });
 
-// Get all pending submissions
+// Get all submissions (pending, approved, rejected)
+router.get('/submissions', [
+  query('status').optional().isIn(['pending', 'approved', 'rejected']),
+  query('page').optional().isInt({ min: 1 }),
+  query('limit').optional().isInt({ min: 1, max: 50 })
+], async (req, res) => {
+  try {
+    const { status, page = 1, limit = 10 } = req.query;
+    const skip = (page - 1) * limit;
+
+    const filter = {};
+    if (status) filter.status = status;
+
+    const submissions = await News.find(filter)
+      .populate('author', 'name email village phone')
+      .populate('approvedBy', 'name')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await News.countDocuments(filter);
+
+    // Transform submissions to include id field for frontend compatibility
+    const transformedSubmissions = submissions.map(sub => ({
+      id: sub._id.toString(),
+      title: sub.title,
+      content: sub.content,
+      category: sub.category,
+      village: sub.village,
+      authorName: sub.authorName || (sub.author ? sub.author.name : 'Unknown'),
+      authorPhone: sub.authorPhone || (sub.author ? sub.author.phone : ''),
+      submittedAt: sub.createdAt,
+      status: sub.status,
+      location: sub.location,
+      audioUrl: sub.audioUrl,
+      imageUrl: sub.imageUrl,
+      tags: sub.tags || [],
+      adminNotes: sub.adminNotes,
+      approvedBy: sub.approvedBy
+    }));
+
+    res.json({
+      submissions: transformedSubmissions,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / limit),
+        totalItems: total,
+        hasNext: skip + submissions.length < total,
+        hasPrev: page > 1
+      }
+    });
+  } catch (error) {
+    console.error('Get submissions error:', error);
+    res.status(500).json({ error: 'Failed to fetch submissions' });
+  }
+});
+
+// Get all pending submissions (backward compatibility)
 router.get('/pending', [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 50 })
@@ -155,30 +244,42 @@ router.get('/pending', [
 });
 
 // Approve news submission
-router.post('/approve/:id', async (req, res) => {
+router.put('/approve/:id', async (req, res) => {
   try {
-    const news = await News.findById(req.params.id);
+    const newsId = req.params.id;
+    console.log('Approving news with ID:', newsId);
+
+    const news = await News.findById(newsId);
     if (!news) {
+      console.log('News not found for ID:', newsId);
       return res.status(404).json({ error: 'News article not found' });
     }
 
     if (news.status !== 'pending') {
+      console.log('News status is not pending:', news.status);
       return res.status(400).json({ error: 'News is not pending approval' });
     }
 
     await news.approve(req.user._id);
     await news.publish();
 
-    // Update user's approved submissions
-    await User.findByIdAndUpdate(news.author, {
-      $inc: { approvedSubmissions: 1 },
-      lastSubmissionDate: new Date()
-    });
+    // Update user's approved submissions - handle both ObjectId and string authors
+    if (typeof news.author === 'string') {
+      // For predefined accounts, we don't update user stats
+      console.log('Predefined account author, skipping user stats update');
+    } else {
+      await User.findByIdAndUpdate(news.author, {
+        $inc: { approvedSubmissions: 1 },
+        lastSubmissionDate: new Date()
+      });
 
-    // Check if user should be trusted now
-    const user = await User.findById(news.author);
-    user.checkTrustStatus();
-    await user.save();
+      // Check if user should be trusted now
+      const user = await User.findById(news.author);
+      if (user) {
+        user.checkTrustStatus();
+        await user.save();
+      }
+    }
 
     res.json({ message: 'News approved and published successfully' });
   } catch (error) {
@@ -188,7 +289,7 @@ router.post('/approve/:id', async (req, res) => {
 });
 
 // Reject news submission
-router.post('/reject/:id', [
+router.put('/reject/:id', [
   body('reason').trim().isLength({ min: 10, max: 500 }).withMessage('Rejection reason required (10-500 characters)')
 ], async (req, res) => {
   try {
@@ -198,13 +299,18 @@ router.post('/reject/:id', [
     }
 
     const { reason } = req.body;
-    const news = await News.findById(req.params.id);
-    
+    const newsId = req.params.id;
+    console.log('Rejecting news with ID:', newsId);
+
+    const news = await News.findById(newsId);
+
     if (!news) {
+      console.log('News not found for ID:', newsId);
       return res.status(404).json({ error: 'News article not found' });
     }
 
     if (news.status !== 'pending') {
+      console.log('News status is not pending:', news.status);
       return res.status(400).json({ error: 'News is not pending approval' });
     }
 

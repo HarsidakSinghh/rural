@@ -10,12 +10,12 @@ const newsSchema = new mongoose.Schema({
   content: {
     type: String,
     required: true,
-    minlength: 50
+    minlength: 1
   },
   category: {
     type: String,
     required: true,
-    enum: ['agriculture', 'education', 'health', 'infrastructure', 'scheme', 'event', 'other']
+    enum: ['agriculture', 'education', 'health', 'infrastructure', 'scheme', 'event', 'other', 'news', 'culture', 'issue']
   },
   village: {
     type: String,
@@ -23,8 +23,7 @@ const newsSchema = new mongoose.Schema({
     trim: true
   },
   author: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    type: mongoose.Schema.Types.Mixed,
     required: true
   },
   authorName: {
@@ -43,11 +42,11 @@ const newsSchema = new mongoose.Schema({
   location: {
     latitude: {
       type: Number,
-      required: true
+      required: false
     },
     longitude: {
       type: Number,
-      required: true
+      required: false
     },
     address: String
   },

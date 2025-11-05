@@ -9,9 +9,8 @@ const Login: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'admin' | 'reporter'>('reporter');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -21,9 +20,15 @@ const Login: React.FC = () => {
     setError('');
 
     try {
-      const success = await login(username, password);
+      const success = await login(email, password);
       if (success) {
-        navigate('/');
+        // Redirect admins directly to dashboard, others to home
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (user.role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
       } else {
         setError(t('invalid_credentials'));
       }
@@ -56,14 +61,14 @@ const Login: React.FC = () => {
             <div className="form-group">
               <label className="form-label">
                 <User size={16} />
-                {t('username')}
+                {t('email')}
               </label>
               <input
-                type="text"
+                type="email"
                 className="form-input"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder={t('enter_username')}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={t('enter_email')}
                 required
               />
             </div>
@@ -83,17 +88,6 @@ const Login: React.FC = () => {
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">{t('role')}</label>
-              <select
-                className="form-input"
-                value={role}
-                onChange={(e) => setRole(e.target.value as 'admin' | 'reporter')}
-              >
-                <option value="reporter">{t('reporter')}</option>
-                <option value="admin">{t('admin')}</option>
-              </select>
-            </div>
 
             <button 
               type="submit" 

@@ -1,8 +1,11 @@
+require('dotenv').config();
+console.log("JWT_SECRET from env:", process.env.JWT_SECRET);
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-require('dotenv').config();
+const mongoose = require('mongoose');
+
 
 const authRoutes = require('./routes/auth');
 const newsRoutes = require('./routes/news');
@@ -10,7 +13,7 @@ const adminRoutes = require('./routes/admin');
 const userRoutes = require('./routes/user');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Security middleware
 app.use(helmet());
@@ -42,7 +45,8 @@ app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    version: '1.0.0'
+    version: '1.0.0',
+    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'
   });
 });
 
@@ -60,9 +64,26 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
-});
+// Connect to MongoDB and start server
+async function startServer() {
+  try {
+    console.log('Connecting to MongoDB...');
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('✅ MongoDB connected successfully!');
+    
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to connect to MongoDB:', error.message);
+    process.exit(1);
+  }
+}
+
+startServer();
 
 module.exports = app;

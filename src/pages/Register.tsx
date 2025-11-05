@@ -14,6 +14,7 @@ const Register: React.FC = () => {
     email: '',
     phone: '',
     village: '',
+    password: '',
     role: 'reporter' as const
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -132,6 +133,23 @@ const Register: React.FC = () => {
                 onChange={handleInputChange}
                 placeholder={t('enter_village')}
                 required
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">
+                <Shield size={16} />
+                {t('password')}
+              </label>
+              <input
+                type="password"
+                name="password"
+                className="form-input"
+                value={formData.password}
+                onChange={handleInputChange}
+                placeholder={t('enter_password')}
+                required
+                minLength={6}
               />
             </div>
 

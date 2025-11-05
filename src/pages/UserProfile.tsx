@@ -3,6 +3,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { UserProfile, UserStats, UserActivity } from '../types';
 import { User, Mail, Phone, MapPin, Calendar, Eye, FileText, TrendingUp, Award, Shield, Activity, BarChart3, Clock, X } from 'lucide-react';
+import apiService from '../services/api';
 
 // Mock data for demonstration
 const mockUserProfile: UserProfile = {
@@ -58,25 +59,101 @@ const UserProfilePage: React.FC = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile>(mockUserProfile);
   const [activeTab, setActiveTab] = useState<'overview' | 'activity' | 'stats'>('overview');
+  const [loading, setLoading] = useState(true);
 
-  // Update profile based on logged-in user
+  // Fetch user profile and stats from backend
   useEffect(() => {
-    if (user) {
-      setProfile({
-        ...mockUserProfile,
-        id: user.id,
-        name: user.name,
-        email: user.email || '',
-        phone: user.phone || '',
-        village: user.village || '',
-        role: user.role as 'admin' | 'reporter',
-        isTrusted: user.isTrusted || false,
-        stats: {
-          ...mockUserProfile.stats,
-          approvedSubmissions: user.approvedSubmissions || 0
-        }
-      });
-    }
+    const fetchUserData = async () => {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        const [profileResponse, statsResponse] = await Promise.all([
+          apiService.getUserProfile(),
+          apiService.getUserStats()
+        ]);
+        
+        // Find top category from categoryBreakdown
+        const topCategory = statsResponse.categoryBreakdown?.length > 0
+          // @ts-ignore
+          ? statsResponse.categoryBreakdown.reduce((prev, current) => (prev.count > current.count) ? prev : current)._id
+          : 'other';
+
+        // Map recent submissions to activity format
+        // @ts-ignore
+        const recentActivity = statsResponse.recentSubmissions?.map((sub, index) => ({
+          // @ts-ignore
+          id: sub._id || index.toString(),
+          type: 'submission' as const,
+          // @ts-ignore
+          title: sub.title,
+          // @ts-ignore
+          timestamp: sub.createdAt,
+          // @ts-ignore
+          status: sub.status
+        })) || [];
+
+        setProfile({
+          id: profileResponse.user._id || profileResponse.user.id,
+          name: typeof profileResponse.user.name === 'string' ? profileResponse.user.name : '',
+          email: typeof profileResponse.user.email === 'string' ? profileResponse.user.email : '',
+          phone: typeof profileResponse.user.phone === 'string' ? profileResponse.user.phone : '',
+          village: typeof profileResponse.user.village === 'string' ? profileResponse.user.village : '',
+          role: profileResponse.user.role as 'admin' | 'reporter',
+          joinedAt: profileResponse.user.createdAt || new Date().toISOString(),
+          lastActive: new Date().toISOString(),
+          avatar: profileResponse.user.avatar,
+          bio: profileResponse.user.bio || '',
+          isTrusted: profileResponse.user.isTrusted || false,
+          trustLevel: (profileResponse.user.isTrusted ? 'trusted' : 'new') as 'new' | 'trusted' | 'verified',
+          stats: {
+            totalSubmissions: statsResponse.stats.totalSubmissions,
+            approvedSubmissions: statsResponse.stats.approvedSubmissions,
+            rejectedSubmissions: statsResponse.stats.rejectedSubmissions,
+            pendingSubmissions: statsResponse.stats.pendingSubmissions,
+            totalViews: statsResponse.stats.totalViews,
+            thisMonthSubmissions: statsResponse.stats.monthlySubmissions,
+            lastMonthSubmissions: 0, // Not provided by API, set to 0
+            averageViewsPerArticle: statsResponse.stats.totalViews / Math.max(statsResponse.stats.totalSubmissions, 1),
+            topCategory,
+            recentActivity
+          }
+        });
+      } catch (error) {
+        console.error('Failed to fetch user data:', error);
+        // Fallback to user data from auth context with 0 stats
+        setProfile({
+          id: typeof user.id === 'string' ? user.id : '',
+          name: typeof user.name === 'string' ? user.name : '',
+          email: typeof user.email === 'string' ? user.email : '',
+          phone: typeof user.phone === 'string' ? user.phone : '',
+          village: typeof user.village === 'string' ? user.village : '',
+          role: user.role as 'admin' | 'reporter',
+          joinedAt: new Date().toISOString(),
+          lastActive: new Date().toISOString(),
+          avatar: undefined,
+          bio: '',
+          isTrusted: user.isTrusted || false,
+          trustLevel: (user.isTrusted ? 'trusted' : 'new') as 'new' | 'trusted' | 'verified',
+          stats: {
+            totalSubmissions: 0,
+            approvedSubmissions: user.approvedSubmissions || 0,
+            rejectedSubmissions: 0,
+            pendingSubmissions: 0,
+            totalViews: 0,
+            thisMonthSubmissions: 0,
+            lastMonthSubmissions: 0,
+            averageViewsPerArticle: 0,
+            topCategory: 'other',
+            recentActivity: []
+          }
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
   }, [user]);
 
   const formatDate = (dateString: string) => {
@@ -127,6 +204,17 @@ const UserProfilePage: React.FC = () => {
       default: return '#6b7280';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="user-profile-page">
+        <div className="loading-container">
+          <div className="loading-spinner" />
+          <p>{t('loading')}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="user-profile-page">

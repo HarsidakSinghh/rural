@@ -44,6 +44,11 @@ const translations = {
     'culture': 'Culture',
     'issue': 'Issue',
     'event': 'Event',
+    'agriculture': 'Agriculture',
+    'education': 'Education',
+    'health': 'Health',
+    'infrastructure': 'Infrastructure',
+    'other': 'Other',
     
     // Admin
     'dashboard': 'Dashboard',
@@ -97,6 +102,7 @@ const translations = {
     'audio_submission': 'Audio Submission',
     'author_name': 'Author Name',
     'enter_title': 'Enter title',
+    'enter_password': 'Enter password',
     'enter_content': 'Enter content',
     'enter_village': 'Enter village name',
     'enter_author_name': 'Enter author name',
@@ -162,6 +168,11 @@ const translations = {
     'culture': 'संस्कृति',
     'issue': 'मुद्दा',
     'event': 'कार्यक्रम',
+    'agriculture': 'कृषि',
+    'education': 'शिक्षा',
+    'health': 'स्वास्थ्य',
+    'infrastructure': 'अवसंरचना',
+    'other': 'अन्य',
     
     // Admin
     'dashboard': 'डैशबोर्ड',
@@ -215,6 +226,7 @@ const translations = {
     'audio_submission': 'ऑडियो सबमिशन',
     'author_name': 'लेखक का नाम',
     'enter_title': 'शीर्षक दर्ज करें',
+    'enter_password': 'पासवर्ड दर्ज करें',
     'enter_content': 'विषय दर्ज करें',
     'enter_village': 'गांव का नाम दर्ज करें',
     'enter_author_name': 'लेखक का नाम दर्ज करें',
@@ -280,6 +292,11 @@ const translations = {
     'culture': 'ਸੱਭਿਆਚਾਰ',
     'issue': 'ਮੁੱਦਾ',
     'event': 'ਕਾਰਜਕ੍ਰਮ',
+    'agriculture': 'ਖੇਤੀਬਾੜੀ',
+    'education': 'ਸਿੱਖਿਆ',
+    'health': 'ਸਿਹਤ',
+    'infrastructure': 'ਇਨਫਰਾਸਟ੍ਰਕਚਰ',
+    'other': 'ਹੋਰ',
     
     // Admin
     'dashboard': 'ਡੈਸ਼ਬੋਰਡ',
@@ -333,6 +350,7 @@ const translations = {
     'audio_submission': 'ਆਡੀਓ ਸਬਮਿਸ਼ਨ',
     'author_name': 'ਲੇਖਕ ਦਾ ਨਾਮ',
     'enter_title': 'ਸਿਰਲੇਖ ਦਰਜ ਕਰੋ',
+    'enter_password': 'ਪਾਸਵਰਡ ਦਰਜ ਕਰੋ',
     'enter_content': 'ਵਿਸ਼ਾ ਦਰਜ ਕਰੋ',
     'enter_village': 'ਪਿੰਡ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ',
     'enter_author_name': 'ਲੇਖਕ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ',

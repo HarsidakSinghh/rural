@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 class ApiService {
   constructor() {
@@ -8,16 +8,19 @@ class ApiService {
   // Helper method to get headers with auth token
   getHeaders() {
     const token = localStorage.getItem('token');
+    console.log('Sending token:', token); // <-- Add this line here
     return {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` })
     };
   }
-
+  // Helper method to handle API responses
   // Helper method to handle API responses
   async handleResponse(response) {
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Network error' }));
+      console.error('API Error Details:', JSON.stringify(error, null, 2));
+      console.error('Response Status:', response.status);
       throw new Error(error.error || error.message || 'Something went wrong');
     }
     return response.json();
@@ -148,9 +151,17 @@ class ApiService {
     return this.handleResponse(response);
   }
 
+  async getAllSubmissions(filters = {}) {
+    const queryParams = new URLSearchParams(filters).toString();
+    const response = await fetch(`${this.baseURL}/admin/submissions?${queryParams}`, {
+      headers: this.getHeaders()
+    });
+    return this.handleResponse(response);
+  }
+
   async approveNews(id) {
     const response = await fetch(`${this.baseURL}/admin/approve/${id}`, {
-      method: 'POST',
+      method: 'PUT',
       headers: this.getHeaders()
     });
     return this.handleResponse(response);
@@ -158,7 +169,7 @@ class ApiService {
 
   async rejectNews(id, reason) {
     const response = await fetch(`${this.baseURL}/admin/reject/${id}`, {
-      method: 'POST',
+      method: 'PUT',
       headers: this.getHeaders(),
       body: JSON.stringify({ reason })
     });
@@ -217,6 +228,14 @@ class ApiService {
   async getUserSubmissions(filters = {}) {
     const queryParams = new URLSearchParams(filters).toString();
     const response = await fetch(`${this.baseURL}/user/submissions?${queryParams}`, {
+      headers: this.getHeaders()
+    });
+    return this.handleResponse(response);
+  }
+
+  async getUserSubmissionsFromNews(filters = {}) {
+    const queryParams = new URLSearchParams(filters).toString();
+    const response = await fetch(`${this.baseURL}/news/user/submissions?${queryParams}`, {
       headers: this.getHeaders()
     });
     return this.handleResponse(response);

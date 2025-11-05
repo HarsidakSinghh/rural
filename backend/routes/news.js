@@ -25,12 +25,24 @@ router.get('/', [
       .populate('author', 'name email village')
       .sort({ publishedAt: -1 })
       .skip(skip)
-      .limit(parseInt(limit));
+      .limit(parseInt(limit))
+      .lean();
+
+    // Convert ObjectIds to strings for frontend compatibility
+    const serializedNews = news.map(item => ({
+      ...item,
+      id: item._id.toString(),
+      author: typeof item.author === 'object' && item.author !== null ? {
+        ...item.author,
+        id: item.author._id ? item.author._id.toString() : '',
+        _id: item.author._id ? item.author._id.toString() : ''
+      } : item.author
+    }));
 
     const total = await News.countDocuments(filter);
 
     res.json({
-      news,
+      news: serializedNews,
       pagination: {
         currentPage: parseInt(page),
         totalPages: Math.ceil(total / limit),
@@ -48,18 +60,38 @@ router.get('/', [
 // Get single news article
 router.get('/:id', async (req, res) => {
   try {
-    const news = await News.findById(req.params.id)
+    const newsId = req.params.id;
+    console.log('Fetching news with ID:', newsId);
+
+    const news = await News.findById(newsId)
       .populate('author', 'name email village')
       .populate('approvedBy', 'name');
 
     if (!news) {
+      console.log('News not found for ID:', newsId);
       return res.status(404).json({ error: 'News article not found' });
     }
 
     // Increment view count
     await news.incrementViewCount();
 
-    res.json({ news });
+    // Convert ObjectIds to strings for frontend compatibility
+    const serializedNews = {
+      ...news.toObject(),
+      id: news._id.toString(),
+      author: typeof news.author === 'object' && news.author !== null ? {
+        ...news.author,
+        id: news.author._id ? news.author._id.toString() : '',
+        _id: news.author._id ? news.author._id.toString() : ''
+      } : news.author,
+      approvedBy: typeof news.approvedBy === 'object' && news.approvedBy !== null ? {
+        ...news.approvedBy,
+        id: news.approvedBy._id ? news.approvedBy._id.toString() : '',
+        _id: news.approvedBy._id ? news.approvedBy._id.toString() : ''
+      } : news.approvedBy
+    };
+
+    res.json({ news: serializedNews });
   } catch (error) {
     console.error('Get news detail error:', error);
     res.status(500).json({ error: 'Failed to fetch news article' });
@@ -67,13 +99,13 @@ router.get('/:id', async (req, res) => {
 });
 
 // Submit new news article
-router.post('/', authenticateToken, requireReporter, [
-  body('title').trim().isLength({ min: 10, max: 200 }).withMessage('Title must be 10-200 characters'),
-  body('content').trim().isLength({ min: 50 }).withMessage('Content must be at least 50 characters'),
-  body('category').isIn(['agriculture', 'education', 'health', 'infrastructure', 'scheme', 'event', 'other']).withMessage('Invalid category'),
-  body('village').trim().isLength({ min: 2, max: 100 }).withMessage('Village name required'),
-  body('location.latitude').isFloat().withMessage('Valid latitude required'),
-  body('location.longitude').isFloat().withMessage('Valid longitude required'),
+router.post('/', authenticateToken, [
+  body('title').trim().isLength({ min: 1, max: 200 }).withMessage('Title must be 1-200 characters'),
+  body('content').trim().isLength({ min: 1 }).withMessage('Content must be at least 1 character'),
+  body('category').isIn(['agriculture', 'education', 'health', 'infrastructure', 'scheme', 'event', 'other', 'news', 'culture', 'issue']).withMessage('Invalid category'),
+  body('village').trim().isLength({ min: 1, max: 100 }).withMessage('Village name required'),
+  body('location.latitude').optional().isFloat().withMessage('Valid latitude required'),
+  body('location.longitude').optional().isFloat().withMessage('Valid longitude required'),
   body('tags').optional().isArray().withMessage('Tags must be an array')
 ], async (req, res) => {
   try {
@@ -100,7 +132,7 @@ router.post('/', authenticateToken, requireReporter, [
       content,
       category,
       village,
-      author: req.user._id,
+      author: req.user.id || req.user._id,
       authorName: req.user.name,
       location,
       isGeoTagged: !!location,
@@ -114,11 +146,15 @@ router.post('/', authenticateToken, requireReporter, [
 
     await news.save();
 
-    // Update user's total submissions
-    await User.findByIdAndUpdate(req.user._id, {
-      $inc: { totalSubmissions: 1 },
-      lastSubmissionDate: new Date()
-    });
+    // Update user's total submissions (only for database users)
+    if (req.user.id && req.user.id !== req.user._id) {
+      // This is a predefined account, don't update database
+    } else {
+      await User.findByIdAndUpdate(req.user._id, {
+        $inc: { totalSubmissions: 1 },
+        lastSubmissionDate: new Date()
+      });
+    }
 
     res.status(201).json({
       message: 'News submitted successfully',
@@ -136,23 +172,35 @@ router.post('/', authenticateToken, requireReporter, [
 });
 
 // Get user's submitted news
-router.get('/user/submissions', authenticateToken, requireReporter, async (req, res) => {
+router.get('/user/submissions', authenticateToken, async (req, res) => {
   try {
     const { status, page = 1, limit = 10 } = req.query;
     const skip = (page - 1) * limit;
 
-    const filter = { author: req.user._id };
+    const filter = { author: req.user.id || req.user._id };
     if (status) filter.status = status;
 
     const news = await News.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(parseInt(limit));
+      .limit(parseInt(limit))
+      .lean();
+
+    // Convert ObjectIds to strings for frontend compatibility
+    const serializedNews = news.map(item => ({
+      ...item,
+      id: item._id.toString(),
+      author: typeof item.author === 'object' && item.author !== null ? {
+        ...item.author,
+        id: item.author._id ? item.author._id.toString() : '',
+        _id: item.author._id ? item.author._id.toString() : ''
+      } : item.author
+    }));
 
     const total = await News.countDocuments(filter);
 
     res.json({
-      news,
+      news: serializedNews,
       pagination: {
         currentPage: parseInt(page),
         totalPages: Math.ceil(total / limit),
@@ -168,7 +216,7 @@ router.get('/user/submissions', authenticateToken, requireReporter, async (req, 
 });
 
 // Update news article (only by author)
-router.put('/:id', authenticateToken, requireReporter, [
+router.put('/:id', authenticateToken, [
   body('title').optional().trim().isLength({ min: 10, max: 200 }),
   body('content').optional().trim().isLength({ min: 50 }),
   body('category').optional().isIn(['agriculture', 'education', 'health', 'infrastructure', 'scheme', 'event', 'other']),
@@ -186,7 +234,8 @@ router.put('/:id', authenticateToken, requireReporter, [
     }
 
     // Check if user is the author or admin
-    if (news.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    const userId = req.user.id || req.user._id;
+    if (news.author.toString() !== userId.toString() && req.user.role !== 'admin') {
       return res.status(403).json({ error: 'Not authorized to edit this article' });
     }
 
@@ -209,9 +258,20 @@ router.put('/:id', authenticateToken, requireReporter, [
       { new: true, runValidators: true }
     ).populate('author', 'name email village');
 
+    // Convert ObjectIds to strings for frontend compatibility
+    const serializedNews = {
+      ...updatedNews.toObject(),
+      id: updatedNews._id.toString(),
+      author: typeof updatedNews.author === 'object' && updatedNews.author !== null ? {
+        ...updatedNews.author,
+        id: updatedNews.author._id ? updatedNews.author._id.toString() : '',
+        _id: updatedNews.author._id ? updatedNews.author._id.toString() : ''
+      } : updatedNews.author
+    };
+
     res.json({
       message: 'News updated successfully',
-      news: updatedNews
+      news: serializedNews
     });
   } catch (error) {
     console.error('Update news error:', error);
@@ -220,7 +280,7 @@ router.put('/:id', authenticateToken, requireReporter, [
 });
 
 // Delete news article (only by author or admin)
-router.delete('/:id', authenticateToken, requireReporter, async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const news = await News.findById(req.params.id);
     if (!news) {
@@ -228,7 +288,8 @@ router.delete('/:id', authenticateToken, requireReporter, async (req, res) => {
     }
 
     // Check if user is the author or admin
-    if (news.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    const userId = req.user.id || req.user._id;
+    if (news.author.toString() !== userId.toString() && req.user.role !== 'admin') {
       return res.status(403).json({ error: 'Not authorized to delete this article' });
     }
 
