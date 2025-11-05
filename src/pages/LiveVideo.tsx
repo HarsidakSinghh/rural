@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { LiveVideo } from '../types';
-import { Video, Users, Clock, MapPin, Tag, Play, Pause, Volume2, VolumeX, Share2, MessageCircle, Lock, Shield, Award, User, Camera, Mic, Settings, Radio } from 'lucide-react';
+import { Video, Users, Clock, MapPin, Tag, Play, Pause, Volume2, VolumeX, Share2, MessageCircle, Lock, Shield, Award, User, Camera, Settings, Radio } from 'lucide-react';
 
 // Mock data for demonstration
 const mockLiveVideos: LiveVideo[] = [

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
-import { UserProfile, UserStats, UserActivity } from '../types';
+import { UserProfile } from '../types';
 import { User, Mail, Phone, MapPin, Calendar, Eye, FileText, TrendingUp, Award, Shield, Activity, BarChart3, Clock, X } from 'lucide-react';
 import apiService from '../services/api';
 

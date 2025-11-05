@@ -233,14 +233,6 @@ class ApiService {
     return this.handleResponse(response);
   }
 
-  async getUserSubmissionsFromNews(filters = {}) {
-    const queryParams = new URLSearchParams(filters).toString();
-    const response = await fetch(`${this.baseURL}/news/user/submissions?${queryParams}`, {
-      headers: this.getHeaders()
-    });
-    return this.handleResponse(response);
-  }
-
   async getUserPerformance() {
     const response = await fetch(`${this.baseURL}/user/performance`, {
       headers: this.getHeaders()

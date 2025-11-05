@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { NewsCategory } from '../types';
-import { Mic, MicOff, MapPin, Upload, FileText, User, Phone, MapPin as MapPinIcon } from 'lucide-react';
+import { MapPin, Upload, FileText, MapPin as MapPinIcon } from 'lucide-react';
 import apiService from '../services/api';
 
 const SubmitNews: React.FC = () => {
@@ -15,7 +15,7 @@ const SubmitNews: React.FC = () => {
   const [content, setContent] = useState('');
   const [category, setCategory] = useState<NewsCategory>('news');
   const [village, setVillage] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
+
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
