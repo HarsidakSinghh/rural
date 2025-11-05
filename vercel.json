@@ -20,6 +20,6 @@
     }
   ],
   "env": {
-    "REACT_APP_API_URL": "https://your-backend.vercel.app/api"
+    "REACT_APP_API_URL": "https://rural-beige.vercel.app/api"
   }
 }
