@@ -64,23 +64,20 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// Export for Vercel serverless function
-module.exports = async (req, res) => {
-  try {
-    // Connect to MongoDB if not already connected
-    if (mongoose.connection.readyState !== 1) {
-      console.log('Connecting to MongoDB...');
-      await mongoose.connect(process.env.MONGODB_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
-      console.log('✅ MongoDB connected successfully!');
-    }
-
-    // Handle the request with Express app
-    return app(req, res);
-  } catch (error) {
-    console.error('❌ Failed to connect to MongoDB:', error.message);
-    res.status(500).json({ error: 'Internal server error' });
+// Connect to MongoDB
+async function connectDB() {
+  if (mongoose.connection.readyState !== 1) {
+    console.log('Connecting to MongoDB...');
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('✅ MongoDB connected successfully!');
   }
-};
+}
+
+// Initialize database connection
+connectDB().catch(console.error);
+
+// Export the Express app for Vercel
+module.exports = app;
