@@ -81,3 +81,10 @@ connectDB().catch(console.error);
 
 // Export the Express app for Vercel
 module.exports = app;
+
+// Start server in local/dev environments
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 API server listening on http://localhost:${PORT}`);
+  });
+}

@@ -157,27 +157,79 @@ const Home: React.FC = () => {
     }
   };
 
+  // Derived UI-only data: topic frequencies for chip cloud
+  const topicFrequencies = React.useMemo(() => {
+    const freq: Record<string, number> = {};
+    (news || []).forEach(a => {
+      (a.tags || []).forEach(tag => {
+        const key = String(tag).toLowerCase();
+        freq[key] = (freq[key] || 0) + 1;
+      });
+    });
+    return Object.entries(freq)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 12);
+  }, [news]);
+
+  // Most read list (top by view count)
+  const mostRead = React.useMemo(() => {
+    return [...(news || [])]
+      .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
+      .slice(0, 5);
+  }, [news]);
+
+  // Regional highlights (by village)
+  const villageStats = React.useMemo(() => {
+    const map: Record<string, number> = {};
+    (news || []).forEach(a => {
+      if (!a.village) return;
+      map[a.village] = (map[a.village] || 0) + 1;
+    });
+    return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  }, [news]);
+
   return (
     <div className="home-page">
-      {/* Hero Section */}
-      <div className="hero-section">
-        <div className="hero-background" />
-        <div className="hero-content">
-          <h1 className="hero-title">
-            {t('welcome_to_gram_samachar')}
-          </h1>
-          <p className="hero-subtitle">
-            {t('community_news_platform')}
-          </p>
-          <div className="hero-actions">
-            <Link to="/submit" className="btn btn-primary hero-btn">
-              <Newspaper size={18} />
-              {t('submit_news')}
-            </Link>
-            <Link to="/register" className="btn btn-secondary hero-btn">
-              <Users size={18} />
-              {t('become_reporter')}
-            </Link>
+      {/* Top Strip: Headlines ticker and quick stats */}
+      <div className="top-strip">
+        <div className="ticker-row">
+          <div className="ticker-heading">Top Stories</div>
+          <div className="headline-ticker">
+            <div className="ticker-content">
+              {(filteredNews.length ? filteredNews : news).slice(0, 10).map((article, i) => (
+                <span key={article.id || i} className="ticker-item">{article.title}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="info-strip">
+          <div className="info-item">📰 {news.length}</div>
+          <div className="info-item">📍 {news.filter(a => a.isGeoTagged).length}</div>
+          <div className="info-item">🏷️ {new Set(news.map(a => a.category)).size}</div>
+        </div>
+      </div>
+
+      {/* Quick Stats Row */}
+      <div className="quick-stats">
+        <div className="stat-card">
+          <div className="stat-icon">🕒</div>
+          <div className="stat-text">
+            <div className="stat-title">{t('latest_news')}</div>
+            <div className="stat-sub">{filteredNews.length || news.length} {t('news')}</div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon">🌾</div>
+          <div className="stat-text">
+            <div className="stat-title">{t('community_news_platform')}</div>
+            <div className="stat-sub">{t('contribute_to_community')}</div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon">🔒</div>
+          <div className="stat-text">
+            <div className="stat-title">Safe & Verified</div>
+            <div className="stat-sub">Zero tolerance on spam</div>
           </div>
         </div>
       </div>
@@ -293,6 +345,83 @@ const Home: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Topics Cloud */}
+      {topicFrequencies.length > 0 && (
+        <div className="topics-cloud">
+          <div className="topics-header">Trending Topics</div>
+          <div className="topics-list">
+            {topicFrequencies.map(([topic, count]) => (
+              <span key={topic} className="topic-chip">
+                #{topic} <span className="topic-count">{count}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Editorial Note */}
+      <div className="editorial-note">
+        <div className="editorial-title">From the Desk</div>
+        <p className="editorial-text">
+          Grassroots stories shape better decisions. Explore developments, issues, and culture from
+          villages across the region—reported by the community.
+        </p>
+      </div>
+
+      {/* Most Read */}
+      {mostRead.length > 0 && (
+        <div className="most-read">
+          <div className="most-read-header">Most Read</div>
+          <ol className="most-read-list">
+            {mostRead.map((article, idx) => (
+              <li key={article.id || idx} className="most-read-item">
+                <Link to={`/news/${article.id}`} className="most-read-link">
+                  <span className="most-read-rank">{idx + 1}</span>
+                  <span className="most-read-title">{article.title}</span>
+                  <span className="most-read-views">{article.viewCount}</span>
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {/* Regional Highlights */}
+      {villageStats.length > 0 && (
+        <div className="regional-highlights">
+          <div className="regional-header">Regional Highlights</div>
+          <div className="regional-list">
+            {villageStats.map(([village, count]) => (
+              <span key={village} className="region-chip">
+                📍 {village}
+                <span className="region-count">{count}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Newsletter CTA (non-functional) */}
+      <div className="newsletter-card">
+        <div className="newsletter-title">Weekly Brief</div>
+        <div className="newsletter-sub">Top stories and rural insights in your inbox.</div>
+        <div className="newsletter-actions">
+          <input className="newsletter-input" placeholder="your@email" />
+          <button className="btn btn-secondary">Subscribe</button>
+        </div>
+      </div>
+
+      {/* Footer Info Bar */}
+      <footer className="footer-bar" role="contentinfo">
+        <div className="footer-links">
+          <Link to="/about" className="footer-link">About</Link>
+          <Link to="/contact" className="footer-link">Contact</Link>
+          <Link to="/privacy" className="footer-link">Privacy</Link>
+          <Link to="/terms" className="footer-link">Terms</Link>
+        </div>
+        <div className="footer-meta">© {new Date().getFullYear()} Gram Samachar</div>
+      </footer>
 
       {/* Submit News CTA */}
       <div className="cta-card">
