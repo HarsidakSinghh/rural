@@ -64,20 +64,43 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// Connect to MongoDB
+// Connect to MongoDB (serverless-friendly with cached promise)
+let cachedMongoPromise = null;
 async function connectDB() {
-  if (mongoose.connection.readyState !== 1) {
-    console.log('Connecting to MongoDB...');
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log('✅ MongoDB connected successfully!');
+  if (mongoose.connection.readyState === 1) return; // already connected
+  if (cachedMongoPromise) {
+    await cachedMongoPromise;
+    return;
   }
+  console.log('Connecting to MongoDB...');
+  cachedMongoPromise = mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log('✅ MongoDB connected successfully!');
+  })
+  .catch((err) => {
+    console.error('❌ MongoDB connection error:', err.message);
+    throw err;
+  })
+  .finally(() => {
+    cachedMongoPromise = null;
+  });
+  await cachedMongoPromise;
 }
 
-// Initialize database connection
-connectDB().catch(console.error);
+// Ensure DB connection attempt happens per request in serverless envs
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+  } catch (e) {
+    // Log and continue; specific routes may still work without DB
+    console.error('DB connect middleware error:', e && e.message);
+  } finally {
+    next();
+  }
+});
 
 // Export the Express app for Vercel
 module.exports = app;
