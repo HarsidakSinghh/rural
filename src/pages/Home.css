@@ -2,7 +2,7 @@
 
 /* Hero Section - Clean and Minimal */
 .hero-section {
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, var(--primary-color, #1e3a8a) 0%, var(--primary-light, #3b82f6) 100%);
   color: white;
   padding: 3rem 1rem 2rem;
   margin-bottom: 2rem;
@@ -153,13 +153,13 @@
   display: flex;
   gap: 0.75rem;
   padding: 1rem;
-  background: #ffffff;
+  background: var(--card-bg, #ffffff);
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--card-border, #e5e7eb);
 }
 
 .category-container::-webkit-scrollbar {
@@ -224,10 +224,10 @@
 
 .news-item {
   position: relative;
-  background: #ffffff;
+  background: var(--card-bg, #ffffff);
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--card-border, #f1f5f9);
   transition: all 0.2s ease;
   cursor: pointer;
   overflow: hidden;
@@ -335,10 +335,10 @@
 .loading {
   text-align: center;
   padding: 3rem 2rem;
-  background: #ffffff;
+  background: var(--card-bg, #ffffff);
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--card-border, #e5e7eb);
   margin: 2rem 1rem;
 }
 
@@ -354,12 +354,12 @@
 
 .empty-state {
   text-align: center;
-  color: #6b7280;
+  color: var(--text-secondary, #6b7280);
   padding: 3rem 2rem;
-  background: #ffffff;
+  background: var(--card-bg, #ffffff);
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--card-border, #e5e7eb);
   margin: 2rem 1rem;
 }
 
