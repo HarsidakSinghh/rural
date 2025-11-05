@@ -64,29 +64,40 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// Connect to MongoDB (serverless-friendly with cached promise)
-let cachedMongoPromise = null;
+// Connect to MongoDB (serverless-friendly with global cache)
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
 async function connectDB() {
-  if (mongoose.connection.readyState === 1) return; // already connected
-  if (cachedMongoPromise) {
-    await cachedMongoPromise;
-    return;
+  if (cached.conn) {
+    return cached.conn;
   }
-  console.log('Connecting to MongoDB...');
-  cachedMongoPromise = mongoose.connect(process.env.MONGODB_URI, {
-    // Removed deprecated options
-  })
-  .then(() => {
-    console.log('✅ MongoDB connected successfully!');
-  })
-  .catch((err) => {
-    console.error('❌ MongoDB connection error:', err.message);
-    throw err;
-  })
-  .finally(() => {
-    cachedMongoPromise = null;
-  });
-  await cachedMongoPromise;
+
+  if (!cached.promise) {
+    const opts = {
+      bufferCommands: false,
+    };
+
+    cached.promise = mongoose.connect(process.env.MONGODB_URI, opts).then((mongoose) => {
+      console.log('✅ MongoDB connected successfully!');
+      return mongoose;
+    }).catch((err) => {
+      console.error('❌ MongoDB connection error:', err.message);
+      throw err;
+    });
+  }
+
+  try {
+    cached.conn = await cached.promise;
+  } catch (e) {
+    cached.promise = null;
+    throw e;
+  }
+
+  return cached.conn;
 }
 
 // Ensure DB connection attempt happens per request in serverless envs
