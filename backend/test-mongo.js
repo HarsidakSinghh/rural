@@ -9,8 +9,6 @@ async function testConnection() {
     
     // Set connection options
     const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000, // 5 seconds
       connectTimeoutMS: 10000, // 10 seconds
     };

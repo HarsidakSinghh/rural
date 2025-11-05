@@ -74,8 +74,7 @@ async function connectDB() {
   }
   console.log('Connecting to MongoDB...');
   cachedMongoPromise = mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
+    // Removed deprecated options
   })
   .then(() => {
     console.log('✅ MongoDB connected successfully!');
