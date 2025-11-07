@@ -123,7 +123,7 @@ router.get('/:id', async (req, res) => {
       } : news.approvedBy
     };
 
-    res.json({ news: serializedNews });
+    res.json(serializedNews);
   } catch (error) {
     console.error('Get news detail error:', error);
     res.status(500).json({ error: 'Failed to fetch news article' });
@@ -131,7 +131,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Submit new news article
-router.post('/', authenticateToken, [
+router.post('/', authenticateToken, upload.array('images', 5), [
   body('title').trim().isLength({ min: 1, max: 200 }).withMessage('Title must be 1-200 characters'),
   body('content').trim().isLength({ min: 1 }).withMessage('Content must be at least 1 character'),
   body('category').isIn(['agriculture', 'education', 'health', 'infrastructure', 'scheme', 'event', 'other', 'news', 'culture', 'issue']).withMessage('Invalid category'),
@@ -153,11 +153,20 @@ router.post('/', authenticateToken, [
       village,
       location,
       tags = [],
-      images = [],
       videos = [],
       priority = 'medium',
       isBreaking = false
     } = req.body;
+
+    // Process uploaded images
+    let images = [];
+    if (req.files && req.files.length > 0) {
+      images = req.files.map(file => ({
+        url: `/uploads/images/${file.filename}`,
+        caption: req.body[`caption_${file.originalname}`] || '',
+        alt: req.body[`alt_${file.originalname}`] || file.originalname
+      }));
+    }
 
     const news = new News({
       title,

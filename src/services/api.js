@@ -86,10 +86,32 @@ class ApiService {
   }
 
   async submitNews(newsData) {
+    const formData = new FormData();
+
+    // Add text fields
+    Object.keys(newsData).forEach(key => {
+      if (key !== 'images' && key !== 'imageFiles') {
+        if (typeof newsData[key] === 'object') {
+          formData.append(key, JSON.stringify(newsData[key]));
+        } else {
+          formData.append(key, newsData[key]);
+        }
+      }
+    });
+
+    // Add image files
+    if (newsData.imageFiles && newsData.imageFiles.length > 0) {
+      newsData.imageFiles.forEach((file, index) => {
+        formData.append('images', file);
+      });
+    }
+
     const response = await fetch(`${this.baseURL}/news`, {
       method: 'POST',
-      headers: this.getHeaders(),
-      body: JSON.stringify(newsData)
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      },
+      body: formData
     });
     return this.handleResponse(response);
   }

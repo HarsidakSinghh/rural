@@ -41,8 +41,12 @@ export interface NewsSubmission {
   };
   audioFile?: File;
   audioUrl?: string;
-  imageFile?: File;
-  imageUrl?: string;
+  imageFiles?: File[];
+  images?: Array<{
+    url: string;
+    caption?: string;
+    alt?: string;
+  }>;
   tags: string[];
   adminNotes?: string;
 }

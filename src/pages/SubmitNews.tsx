@@ -18,7 +18,7 @@ const SubmitNews: React.FC = () => {
 
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [images, setImages] = useState<Array<{file: File, preview: string, caption?: string, url: string}>>([]);
+  const [images, setImages] = useState<Array<{file: File, preview: string, caption?: string}>>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
 
   // Auto-fill village from user profile
@@ -55,30 +55,21 @@ const SubmitNews: React.FC = () => {
     }
   };
 
-  const handleImageUpload = async (files: FileList) => {
-    setUploadingImages(true);
-    const newImages: Array<{file: File, preview: string, caption?: string, url: string}> = [];
+  const handleImageUpload = (files: FileList) => {
+    const newImages: Array<{file: File, preview: string, caption?: string}> = [];
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       if (file.type.startsWith('image/')) {
-        try {
-          const response = await apiService.uploadImage(file);
-          newImages.push({
-            file,
-            preview: URL.createObjectURL(file),
-            caption: '',
-            url: response.image.url
-          });
-        } catch (error) {
-          console.error('Image upload error:', error);
-          alert(`Failed to upload ${file.name}`);
-        }
+        newImages.push({
+          file,
+          preview: URL.createObjectURL(file),
+          caption: ''
+        });
       }
     }
 
     setImages(prev => [...prev, ...newImages]);
-    setUploadingImages(false);
   };
 
   const removeImage = (index: number) => {
@@ -109,11 +100,7 @@ const SubmitNews: React.FC = () => {
           longitude: 0
         },
         tags: [],
-        images: images.map(img => ({
-          url: img.url,
-          caption: img.caption || '',
-          alt: img.caption || img.file.name
-        }))
+        imageFiles: images.map(img => img.file)
       };
 
       await apiService.submitNews(newsData);
@@ -231,12 +218,11 @@ const SubmitNews: React.FC = () => {
                 multiple
                 id="photo-upload"
                 onChange={(e) => e.target.files && handleImageUpload(e.target.files)}
-                disabled={uploadingImages}
               />
               <label htmlFor="photo-upload" className="photo-upload-label">
                 <Image size={32} />
                 <p className="photo-upload-text">
-                  {uploadingImages ? t('uploading') : t('drag_drop_photos')}
+                  {t('drag_drop_photos')}
                 </p>
                 <p className="photo-upload-hint">{t('or_click_to_browse')}</p>
               </label>
