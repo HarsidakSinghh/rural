@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLanguage } from '../contexts/LanguageContext';
+import { useLanguage } from '../contexts/LanguageContextFree';
 import { useAuth } from '../contexts/AuthContext';
 import { User, Mail, Phone, MapPin, Shield, ArrowLeft } from 'lucide-react';
 

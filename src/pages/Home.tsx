@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useLanguage } from '../contexts/LanguageContext';
+import { useLanguage } from '../contexts/LanguageContextFree';
 import { NewsArticle, NewsCategory } from '../types';
 import { MapPin, Calendar, User, Eye, TrendingUp, Newspaper, Users, Award } from 'lucide-react';
 import apiService from '../services/api';
@@ -77,11 +77,13 @@ const mockNews: NewsArticle[] = [
 ];
 
 const Home: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language, translateContent } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<NewsCategory | 'all'>('all');
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [animateCards, setAnimateCards] = useState(false);
+  const [translatedNews, setTranslatedNews] = useState<NewsArticle[]>([]);
+  const [isTranslating, setIsTranslating] = useState(false);
 
   const categories: Array<{ value: NewsCategory | 'all'; label: string; icon: React.ReactNode }> = [
     { value: 'all', label: t('latest_news'), icon: <TrendingUp size={18} /> },
@@ -97,9 +99,9 @@ const Home: React.FC = () => {
     { value: 'other', label: t('other'), icon: <Newspaper size={18} /> }
   ];
 
-  const filteredNews = selectedCategory === 'all' 
-    ? news 
-    : news.filter(article => article.category === selectedCategory);
+  const filteredNews = selectedCategory === 'all'
+    ? (translatedNews.length > 0 ? translatedNews : news)
+    : (translatedNews.length > 0 ? translatedNews : news).filter(article => article.category === selectedCategory);
 
   // Fetch news from backend
   useEffect(() => {
@@ -123,6 +125,45 @@ const Home: React.FC = () => {
     fetchNews();
   }, []);
 
+  // Translate news when language changes
+  useEffect(() => {
+    const translateNews = async () => {
+      if (language === 'en' || news.length === 0) {
+        setTranslatedNews([]);
+        return;
+      }
+
+      setIsTranslating(true);
+      try {
+        const translated = await Promise.all(
+          news.map(async (article) => {
+            const [translatedTitle, translatedContent] = await Promise.all([
+              translateContent(article.title),
+              translateContent(article.content.length > 200
+                ? article.content.substring(0, 200) + '...'
+                : article.content
+              )
+            ]);
+
+            return {
+              ...article,
+              title: translatedTitle,
+              content: translatedContent
+            };
+          })
+        );
+        setTranslatedNews(translated);
+      } catch (error) {
+        console.error('Translation error:', error);
+        setTranslatedNews([]);
+      } finally {
+        setIsTranslating(false);
+      }
+    };
+
+    translateNews();
+  }, [language, news, translateContent]);
+
   // Filter news when category changes
   useEffect(() => {
     setAnimateCards(false);
@@ -138,8 +179,6 @@ const Home: React.FC = () => {
       year: 'numeric'
     });
   };
-
-
 
   const getCategoryGradient = (category: NewsCategory) => {
     switch (category) {
@@ -261,6 +300,11 @@ const Home: React.FC = () => {
           <div className="loading">
             <div className="loading-spinner" />
             {t('loading')}
+          </div>
+        ) : isTranslating ? (
+          <div className="loading">
+            <div className="loading-spinner" />
+            Translating content...
           </div>
         ) : filteredNews.length === 0 ? (
           <div className="empty-state">

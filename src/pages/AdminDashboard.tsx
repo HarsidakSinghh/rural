@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
+import { useLanguage } from '../contexts/LanguageContextFree';
 import { useAuth } from '../contexts/AuthContext';
 import { NewsSubmission, AdminStats } from '../types';
 import { Eye, Check, X, Edit, Trash2, BarChart3, Shield, Users, FileText, AlertCircle, TrendingUp, MapPin, Tag } from 'lucide-react';

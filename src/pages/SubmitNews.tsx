@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLanguage } from '../contexts/LanguageContext';
+import { useLanguage } from '../contexts/LanguageContextFree';
 import { useAuth } from '../contexts/AuthContext';
 import { NewsCategory } from '../types';
 import { MapPin, Upload, FileText, MapPin as MapPinIcon, Image, X } from 'lucide-react';

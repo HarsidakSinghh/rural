@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useLanguage } from '../contexts/LanguageContext';
+import { useLanguage } from '../contexts/LanguageContextFree';
 import { NewsArticle } from '../types';
 import { MapPin, Calendar, User, Eye, ArrowLeft, FileText, Tag, MapPin as MapPinIcon } from 'lucide-react';
 import apiService from '../services/api';

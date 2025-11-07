@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
+import { useLanguage } from '../contexts/LanguageContextFree';
 import { useAuth } from '../contexts/AuthContext';
 import { LiveVideo } from '../types';
 import { Video, Users, Clock, MapPin, Tag, Play, Pause, Volume2, VolumeX, Share2, MessageCircle, Lock, Shield, Award, User, Camera, Settings, Radio } from 'lucide-react';

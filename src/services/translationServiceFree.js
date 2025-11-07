@@ -3,7 +3,7 @@ class TranslationService {
   constructor() {
     // Using MyMemory API (free tier) and Lingva Translate as fallback
     this.mymemoryURL = 'https://api.mymemory.translated.net/get';
-    this.lingvaURL = 'https://lingva.ml/api/v1';
+    this.lingvaURL = 'https://translate.plausibility.cloud/api/v1';
     this.cache = new Map();
   }
 
@@ -74,12 +74,12 @@ class TranslationService {
     }
 
     try {
-      // Try MyMemory API first
-      let translatedText = await this.translateWithMyMemory(text, targetLanguage, sourceLanguage);
+      // Try Lingva API first (more reliable for longer texts)
+      let translatedText = await this.translateWithLingva(text, targetLanguage, sourceLanguage);
 
-      // If MyMemory fails, try Lingva
+      // If Lingva fails, try MyMemory
       if (!translatedText) {
-        translatedText = await this.translateWithLingva(text, targetLanguage, sourceLanguage);
+        translatedText = await this.translateWithMyMemory(text, targetLanguage, sourceLanguage);
       }
 
       // If both APIs fail, use fallback
