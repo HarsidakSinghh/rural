@@ -127,9 +127,16 @@ newsSchema.virtual('excerpt').get(function() {
 });
 
 // Method to increment view count
-newsSchema.methods.incrementViewCount = function() {
-  this.viewCount += 1;
-  return this.save();
+newsSchema.methods.incrementViewCount = async function() {
+  try {
+    this.viewCount += 1;
+    await this.save();
+    return true;
+  } catch (error) {
+    console.error('Error incrementing view count:', error);
+    // Don't throw error - view count is not critical
+    return false;
+  }
 };
 
 // Method to approve news

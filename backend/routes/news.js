@@ -92,8 +92,10 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'News article not found' });
     }
 
-    // Increment view count
-    await news.incrementViewCount();
+    // Increment view count (async, don't block response)
+    news.incrementViewCount().catch(error => {
+      console.error('Failed to increment view count:', error);
+    });
 
     // Convert ObjectIds to strings for frontend compatibility
     const serializedNews = {
