@@ -1,46 +1,41 @@
 // Translation service using free translation APIs
 class TranslationService {
   constructor() {
-    // Using MyMemory API (free tier) and Lingva Translate as fallback
-    this.mymemoryURL = 'https://api.mymemory.translated.net/get';
+    // Using LibreTranslate public instance (supports CORS) and fallback to Lingva
+    this.libreTranslateURL = 'https://libretranslate.com/translate';
     this.lingvaURL = 'https://translate.plausibility.cloud/api/v1';
     this.cache = new Map();
   }
 
-  // Primary translation using MyMemory API (free)
-  async translateWithMyMemory(text, targetLanguage, sourceLanguage = 'auto') {
+  // Primary translation using LibreTranslate (free public instance with CORS support)
+  async translateWithLibreTranslate(text, targetLanguage, sourceLanguage = 'auto') {
     try {
-      const params = new URLSearchParams({
-        q: text,
-        langpair: `${sourceLanguage}|${targetLanguage}`,
-        de: 'your-email@example.com' // Optional: helps with rate limits
-      });
-
-      const response = await fetch(`${this.mymemoryURL}?${params}`, {
-        method: 'GET',
+      const response = await fetch(this.libreTranslateURL, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
+        body: JSON.stringify({
+          q: text,
+          source: sourceLanguage === 'auto' ? 'en' : sourceLanguage,
+          target: targetLanguage,
+          format: 'text'
+        })
       });
 
       if (!response.ok) {
-        throw new Error(`MyMemory API error: ${response.status}`);
+        throw new Error(`LibreTranslate API error: ${response.status}`);
       }
 
       const data = await response.json();
-
-      if (data.responseStatus === 200 && data.responseData) {
-        return data.responseData.translatedText;
-      } else {
-        throw new Error('Translation failed');
-      }
+      return data.translatedText;
     } catch (error) {
-      console.warn('MyMemory API failed:', error);
+      console.warn('LibreTranslate API failed:', error);
       return null;
     }
   }
 
-  // Fallback translation using Lingva Translate (completely free, no API key)
+  // Fallback translation using Lingva Translate
   async translateWithLingva(text, targetLanguage, sourceLanguage = 'auto') {
     try {
       const response = await fetch(`${this.lingvaURL}/${sourceLanguage}/${targetLanguage}/${encodeURIComponent(text)}`, {
@@ -74,12 +69,12 @@ class TranslationService {
     }
 
     try {
-      // Try Lingva API first (more reliable for longer texts)
-      let translatedText = await this.translateWithLingva(text, targetLanguage, sourceLanguage);
+      // Try LibreTranslate first (has CORS support)
+      let translatedText = await this.translateWithLibreTranslate(text, targetLanguage, sourceLanguage);
 
-      // If Lingva fails, try MyMemory
+      // If LibreTranslate fails, try Lingva
       if (!translatedText) {
-        translatedText = await this.translateWithMyMemory(text, targetLanguage, sourceLanguage);
+        translatedText = await this.translateWithLingva(text, targetLanguage, sourceLanguage);
       }
 
       // If both APIs fail, use fallback
