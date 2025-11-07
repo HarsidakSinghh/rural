@@ -50,7 +50,7 @@ const NewsDetail: React.FC = () => {
       try {
         setLoading(true);
         const response = await apiService.getNewsById(id);
-        setArticle(response.news);
+        setArticle(response);
       } catch (error) {
         console.error('Failed to fetch article:', error);
         setError('Failed to load article');
