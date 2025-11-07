@@ -139,10 +139,7 @@ const Home: React.FC = () => {
           news.map(async (article) => {
             const [translatedTitle, translatedContent] = await Promise.all([
               translateContent(article.title),
-              translateContent(article.content.length > 200
-                ? article.content.substring(0, 200) + '...'
-                : article.content
-              )
+              translateContent(article.content)
             ]);
 
             return {
@@ -236,7 +233,9 @@ const Home: React.FC = () => {
           <div className="headline-ticker">
             <div className="ticker-content">
               {(filteredNews.length ? filteredNews : news).slice(0, 10).map((article, i) => (
-                <span key={article.id || i} className="ticker-item">{article.title}</span>
+                <span key={article.id || i} className="ticker-item">
+                  {translatedNews.length > 0 ? translatedNews.find(t => t.id === article.id)?.title : article.title}
+                </span>
               ))}
             </div>
           </div>
@@ -347,13 +346,13 @@ const Home: React.FC = () => {
                   {/* Content */}
                   <div className="news-content">
                     <h3 className="news-title">
-                      {article.title}
+                      {translatedNews.length > 0 ? translatedNews.find(t => t.id === article.id)?.title : article.title}
                     </h3>
 
                     <p className="news-excerpt">
-                      {article.content.length > 150
-                        ? `${article.content.substring(0, 150)}...`
-                        : article.content
+                      {(translatedNews.length > 0 ? translatedNews.find(t => t.id === article.id)?.content : article.content)?.length > 150
+                        ? `${(translatedNews.length > 0 ? translatedNews.find(t => t.id === article.id)?.content : article.content)?.substring(0, 150)}...`
+                        : (translatedNews.length > 0 ? translatedNews.find(t => t.id === article.id)?.content : article.content)
                       }
                     </p>
 
@@ -422,7 +421,9 @@ const Home: React.FC = () => {
               <li key={article.id || idx} className="most-read-item">
                 <Link to={`/news/${article.id}`} className="most-read-link">
                   <span className="most-read-rank">{idx + 1}</span>
-                  <span className="most-read-title">{article.title}</span>
+                  <span className="most-read-title">
+                    {translatedNews.length > 0 ? translatedNews.find(t => t.id === article.id)?.title : article.title}
+                  </span>
                   <span className="most-read-views">{article.viewCount}</span>
                 </Link>
               </li>
