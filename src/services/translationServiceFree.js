@@ -1,15 +1,24 @@
 // Translation service using free translation APIs
 class TranslationService {
   constructor() {
-    // Using LibreTranslate public instance (supports CORS) and fallback to Lingva
+    // Using LibreTranslate with proper source language detection
     this.libreTranslateURL = 'https://libretranslate.com/translate';
-    this.lingvaURL = 'https://translate.plausibility.cloud/api/v1';
     this.cache = new Map();
   }
 
-  // Primary translation using LibreTranslate (free public instance with CORS support)
+  // Detect if text is likely English (simple heuristic)
+  isEnglish(text) {
+    // Simple check - if text contains common English words and patterns
+    const englishPatterns = /^[a-zA-Z\s\.,!?\-\(\)'"]+$/;
+    return englishPatterns.test(text) && text.length > 0;
+  }
+
+  // Primary translation using LibreTranslate
   async translateWithLibreTranslate(text, targetLanguage, sourceLanguage = 'auto') {
     try {
+      // Determine source language
+      const detectedSource = this.isEnglish(text) ? 'en' : sourceLanguage;
+
       const response = await fetch(this.libreTranslateURL, {
         method: 'POST',
         headers: {
@@ -17,7 +26,7 @@ class TranslationService {
         },
         body: JSON.stringify({
           q: text,
-          source: sourceLanguage === 'auto' ? 'en' : sourceLanguage,
+          source: detectedSource,
           target: targetLanguage,
           format: 'text'
         })
@@ -35,29 +44,7 @@ class TranslationService {
     }
   }
 
-  // Fallback translation using Lingva Translate
-  async translateWithLingva(text, targetLanguage, sourceLanguage = 'auto') {
-    try {
-      const response = await fetch(`${this.lingvaURL}/${sourceLanguage}/${targetLanguage}/${encodeURIComponent(text)}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Lingva API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.translation;
-    } catch (error) {
-      console.warn('Lingva API failed:', error);
-      return null;
-    }
-  }
-
-  // Main translation method with fallbacks
+  // Main translation method with fallback
   async translateText(text, targetLanguage, sourceLanguage = 'auto') {
     if (!text || text.trim() === '') return text;
     if (sourceLanguage === targetLanguage) return text;
@@ -69,15 +56,10 @@ class TranslationService {
     }
 
     try {
-      // Try LibreTranslate first (has CORS support)
+      // Try LibreTranslate
       let translatedText = await this.translateWithLibreTranslate(text, targetLanguage, sourceLanguage);
 
-      // If LibreTranslate fails, try Lingva
-      if (!translatedText) {
-        translatedText = await this.translateWithLingva(text, targetLanguage, sourceLanguage);
-      }
-
-      // If both APIs fail, use fallback
+      // If LibreTranslate fails, use fallback
       if (!translatedText) {
         translatedText = this.fallbackTranslation(text, targetLanguage);
       }
@@ -96,9 +78,9 @@ class TranslationService {
 
   // Fallback translation for when APIs are not available
   fallbackTranslation(text, targetLanguage) {
-    // For demo purposes, return the original text with a note
+    // For demo purposes, return the original text
     // In a real app, you might want to implement basic translations or use another service
-    return text; // Return original text without the [Translated to...] suffix
+    return text;
   }
 
   // Get language code mapping
