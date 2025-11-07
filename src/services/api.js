@@ -8,7 +8,6 @@ class ApiService {
   // Helper method to get headers with auth token
   getHeaders() {
     const token = localStorage.getItem('token');
-    console.log('Sending token:', token); // <-- Add this line here
     return {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` })
