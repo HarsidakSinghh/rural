@@ -19,6 +19,12 @@ class TranslationService {
       // Determine source language
       const detectedSource = this.isEnglish(text) ? 'en' : sourceLanguage;
 
+      console.log('LibreTranslate request:', {
+        text: text.substring(0, 100) + '...',
+        source: detectedSource,
+        target: targetLanguage
+      });
+
       const response = await fetch(this.libreTranslateURL, {
         method: 'POST',
         headers: {
@@ -32,11 +38,16 @@ class TranslationService {
         })
       });
 
+      console.log('LibreTranslate response status:', response.status);
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('LibreTranslate error response:', errorText);
         throw new Error(`LibreTranslate API error: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log('LibreTranslate response data:', data);
       return data.translatedText;
     } catch (error) {
       console.warn('LibreTranslate API failed:', error);
