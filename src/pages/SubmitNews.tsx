@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { NewsCategory } from '../types';
-import { MapPin, Upload, FileText, MapPin as MapPinIcon } from 'lucide-react';
+import { MapPin, Upload, FileText, MapPin as MapPinIcon, Image, X } from 'lucide-react';
 import apiService from '../services/api';
 
 const SubmitNews: React.FC = () => {
@@ -18,6 +18,8 @@ const SubmitNews: React.FC = () => {
 
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [images, setImages] = useState<Array<{file: File, preview: string, caption?: string, url: string}>>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   // Auto-fill village from user profile
   useEffect(() => {
@@ -53,10 +55,46 @@ const SubmitNews: React.FC = () => {
     }
   };
 
+  const handleImageUpload = async (files: FileList) => {
+    setUploadingImages(true);
+    const newImages: Array<{file: File, preview: string, caption?: string, url: string}> = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.type.startsWith('image/')) {
+        try {
+          const response = await apiService.uploadImage(file);
+          newImages.push({
+            file,
+            preview: URL.createObjectURL(file),
+            caption: '',
+            url: response.image.url
+          });
+        } catch (error) {
+          console.error('Image upload error:', error);
+          alert(`Failed to upload ${file.name}`);
+        }
+      }
+    }
+
+    setImages(prev => [...prev, ...newImages]);
+    setUploadingImages(false);
+  };
+
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const updateImageCaption = (index: number, caption: string) => {
+    setImages(prev => prev.map((img, i) =>
+      i === index ? { ...img, caption } : img
+    ));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
       const newsData = {
         title,
@@ -70,7 +108,12 @@ const SubmitNews: React.FC = () => {
           latitude: 0,
           longitude: 0
         },
-        tags: []
+        tags: [],
+        images: images.map(img => ({
+          url: img.url,
+          caption: img.caption || '',
+          alt: img.caption || img.file.name
+        }))
       };
 
       await apiService.submitNews(newsData);
@@ -175,6 +218,51 @@ const SubmitNews: React.FC = () => {
               <div className="location-display">
                 <span className="location-icon">✓</span>
                 {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+              </div>
+            )}
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">{t('photo_upload')}</label>
+            <div className="photo-upload">
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                id="photo-upload"
+                onChange={(e) => e.target.files && handleImageUpload(e.target.files)}
+                disabled={uploadingImages}
+              />
+              <label htmlFor="photo-upload" className="photo-upload-label">
+                <Image size={32} />
+                <p className="photo-upload-text">
+                  {uploadingImages ? t('uploading') : t('drag_drop_photos')}
+                </p>
+                <p className="photo-upload-hint">{t('or_click_to_browse')}</p>
+              </label>
+            </div>
+
+            {images.length > 0 && (
+              <div className="uploaded-images">
+                {images.map((image, index) => (
+                  <div key={index} className="image-preview">
+                    <img src={image.preview} alt={`Preview ${index + 1}`} />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="remove-image-btn"
+                    >
+                      <X size={16} />
+                    </button>
+                    <input
+                      type="text"
+                      placeholder={t('add_caption')}
+                      value={image.caption || ''}
+                      onChange={(e) => updateImageCaption(index, e.target.value)}
+                      className="image-caption-input"
+                    />
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -363,6 +451,121 @@ const SubmitNews: React.FC = () => {
           font-size: 0.9rem;
           color: var(--text-secondary);
           margin: 0;
+        }
+
+        .photo-upload {
+          border: 2px dashed var(--border-color);
+          border-radius: 16px;
+          padding: 3rem 2rem;
+          text-align: center;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          background: var(--background-secondary);
+          position: relative;
+        }
+
+        .photo-upload:hover:not(:has(input:disabled)) {
+          border-color: var(--primary-color);
+          background: rgba(30, 58, 138, 0.02);
+          transform: translateY(-2px);
+        }
+
+        .photo-upload input[type="file"] {
+          position: absolute;
+          opacity: 0;
+          width: 100%;
+          height: 100%;
+          cursor: pointer;
+        }
+
+        .photo-upload:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .photo-upload-label {
+          cursor: pointer;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .photo-upload-text {
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: var(--text-primary);
+          margin: 0;
+        }
+
+        .photo-upload-hint {
+          font-size: 0.9rem;
+          color: var(--text-secondary);
+          margin: 0;
+        }
+
+        .uploaded-images {
+          margin-top: 1.5rem;
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 1rem;
+        }
+
+        .image-preview {
+          position: relative;
+          border-radius: 12px;
+          overflow: hidden;
+          background: var(--background-primary);
+          border: 1px solid var(--border-light);
+          box-shadow: var(--shadow-sm);
+        }
+
+        .image-preview img {
+          width: 100%;
+          height: 150px;
+          object-fit: cover;
+          display: block;
+        }
+
+        .remove-image-btn {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          background: rgba(239, 68, 68, 0.9);
+          color: white;
+          border: none;
+          border-radius: 50%;
+          width: 24px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .remove-image-btn:hover {
+          background: rgba(239, 68, 68, 1);
+          transform: scale(1.1);
+        }
+
+        .image-caption-input {
+          width: 100%;
+          padding: 0.5rem;
+          border: none;
+          border-top: 1px solid var(--border-light);
+          font-size: 0.85rem;
+          background: var(--background-secondary);
+          color: var(--text-primary);
+        }
+
+        .image-caption-input:focus {
+          outline: none;
+          background: var(--background-primary);
+        }
+
+        .image-caption-input::placeholder {
+          color: var(--text-secondary);
         }
 
         .form-actions {

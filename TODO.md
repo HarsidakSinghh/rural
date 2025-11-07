@@ -1,28 +1,18 @@
-# Admin Dashboard Real Data Integration
+# TODO: Add Photo Upload to News Submission and Display
 
-## Backend Updates
-- [x] Update `/admin/dashboard` route to return data matching AdminStats interface
-  - [x] Map backend fields to frontend expected fields:
-  - `overview.totalSubmissions` → `totalSubmissions`
-  - `overview.pendingSubmissions` → `pendingReviews`
-  - `overview.totalNews` (approved) → `publishedArticles`
-  - `overview.rejectedSubmissions` → `rejectedArticles`
-  - Calculate `totalVillages` from unique villages in News collection
-  - Calculate `activeReporters` from users with recent activity
-  - Map `monthlyStats` to `monthlyStats` (adjust field names)
-  - Generate `dailyStats` array for last 7 days
-  - Map `topVillages` to `topVillages` (add reporters count)
-  - Map `categoryBreakdown` to `categoryBreakdown` (add percentage and views)
+## Backend Changes
+- [x] Install multer in backend for file upload handling
+- [x] Add image upload endpoint in backend/routes/news.js
+- [x] Update backend/routes/news.js to handle image URLs in news submission
 
-## Frontend Updates
-- [x] Remove mock data (mockSubmissions and mockStats) from AdminDashboard.tsx
-- [x] Update fallback logic to show 0 values instead of mock data when API fails
-- [x] Ensure empty data arrays are handled gracefully (show empty states)
+## Frontend Changes
+- [x] Update src/types/index.ts to change imageUrl to images array
+- [x] Add photo upload section in SubmitNews.tsx (similar to audio upload)
+- [x] Update NewsDetail.tsx to display images in the article
+- [x] Update src/services/api.js to add upload method for images
 
-## Testing
-- [x] Test that dashboard loads with real data (Backend and frontend servers started successfully)
-- [x] Verify all stats display correctly (Code changes implemented to match AdminStats interface)
-- [x] Check that empty data shows 0 instead of mock values (Fallback logic updated)
-- [x] Test error handling when backend is unavailable (Manual testing needed)
-- [x] Admin login redirects directly to dashboard
-- [x] Admin dashboard shows all submissions (pending, approved, rejected) for review
+## Testing and Validation
+- [ ] Test image upload functionality
+- [ ] Handle image validation (size, type)
+- [ ] Add image compression if needed
+- [ ] Update any other components that display news previews

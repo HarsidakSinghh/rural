@@ -13,7 +13,11 @@ export interface NewsArticle {
     longitude: number;
   };
   audioUrl?: string;
-  imageUrl?: string;
+  images?: Array<{
+    url: string;
+    caption?: string;
+    alt?: string;
+  }>;
   tags: string[];
   viewCount: number;
   isGeoTagged: boolean;

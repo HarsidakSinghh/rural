@@ -172,6 +172,23 @@ const NewsDetail: React.FC = () => {
             </div>
           </header>
 
+          {article.images && article.images.length > 0 && (
+            <div className="article-images">
+              {article.images.map((image, index) => (
+                <div key={index} className="article-image-container">
+                  <img
+                    src={`${process.env.REACT_APP_API_URL || 'http://localhost:5001'}${image.url}`}
+                    alt={image.alt || `Image ${index + 1}`}
+                    className="article-image"
+                  />
+                  {image.caption && (
+                    <p className="image-caption">{image.caption}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="article-content">
             {article.content.split('\n\n').map((paragraph, index) => (
               <p key={index} className="content-paragraph">
@@ -347,6 +364,43 @@ const NewsDetail: React.FC = () => {
 
         .content-paragraph:last-child {
           margin-bottom: 0;
+        }
+
+        .article-images {
+          margin-bottom: 2.5rem;
+          display: grid;
+          gap: 1.5rem;
+        }
+
+        .article-image-container {
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: var(--shadow-md);
+          background: var(--background-primary);
+          border: 1px solid var(--border-light);
+        }
+
+        .article-image {
+          width: 100%;
+          height: auto;
+          max-height: 500px;
+          object-fit: cover;
+          display: block;
+          transition: transform 0.3s ease;
+        }
+
+        .article-image:hover {
+          transform: scale(1.02);
+        }
+
+        .image-caption {
+          margin: 0;
+          padding: 1rem;
+          background: var(--background-secondary);
+          color: var(--text-secondary);
+          font-size: 0.9rem;
+          font-style: italic;
+          border-top: 1px solid var(--border-light);
         }
 
         .article-location {

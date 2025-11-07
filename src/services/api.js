@@ -135,6 +135,20 @@ class ApiService {
     return this.handleResponse(response);
   }
 
+  async uploadImage(imageFile) {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+
+    const response = await fetch(`${this.baseURL}/news/upload-image`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      },
+      body: formData
+    });
+    return this.handleResponse(response);
+  }
+
   // Admin endpoints
   async getDashboardStats() {
     const response = await fetch(`${this.baseURL}/admin/dashboard`, {
