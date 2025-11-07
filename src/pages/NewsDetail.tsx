@@ -177,7 +177,7 @@ const NewsDetail: React.FC = () => {
               {article.images.map((image, index) => (
                 <div key={index} className="article-image-container">
                   <img
-                    src={`${process.env.REACT_APP_API_URL || 'http://localhost:5001'}${image.url}`}
+                    src={image.url}
                     alt={image.alt || `Image ${index + 1}`}
                     className="article-image"
                   />
