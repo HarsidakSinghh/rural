@@ -2,10 +2,10 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContextFree';
 import { useAuth } from '../contexts/AuthContext';
-import { Globe, User, Video, Shield, LogIn, UserPlus, Moon, Sun, Languages } from 'lucide-react';
+import { User, Video, Shield, LogIn, UserPlus, Moon, Sun, Languages } from 'lucide-react';
 
 const Header: React.FC = () => {
-  const { language, setLanguage, t, translateContent } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const { isAuthenticated, logout, isAdmin, isReporter } = useAuth();
   const location = useLocation();
   const [isScrolled, setIsScrolled] = React.useState(false);
