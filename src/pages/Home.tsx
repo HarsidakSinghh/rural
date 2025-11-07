@@ -366,7 +366,7 @@ const Home: React.FC = () => {
                       </p>
 
                       {/* Meta Information */}
-                    <div className="news-meta">
+                      <div className="news-meta">
                       <div className="meta-item">
                         <User size={14} />
                         <span>{typeof article.author === 'object' && article.author ? article.author.name : article.author}</span>
