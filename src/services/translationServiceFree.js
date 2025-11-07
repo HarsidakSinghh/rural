@@ -9,7 +9,7 @@ class TranslationService {
   // Detect if text is likely English (simple heuristic)
   isEnglish(text) {
     // Simple check - if text contains common English words and patterns
-    const englishPatterns = /^[a-zA-Z\s\.,!?\-\(\)'"]+$/;
+    const englishPatterns = /^[a-zA-Z\s.,!?\-()'"']+$/;
     return englishPatterns.test(text) && text.length > 0;
   }
 
