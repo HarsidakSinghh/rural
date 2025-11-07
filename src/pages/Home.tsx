@@ -379,14 +379,14 @@ const Home: React.FC = () => {
 
                       {/* Footer */}
                       <div className="news-footer">
-                      <span className="village-name">
-                        📍 {article.village}
-                      </span>
-                      <div className="view-count">
-                        <Eye size={14} />
-                        <span>{article.viewCount}</span>
+                        <span className="village-name">
+                          📍 {article.village}
+                        </span>
+                        <div className="view-count">
+                          <Eye size={14} />
+                          <span>{article.viewCount}</span>
+                        </div>
                       </div>
-                    </div>
                   </div>
 
                   {/* Hover effect overlay */}
