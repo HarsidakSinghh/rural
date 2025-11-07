@@ -10,19 +10,7 @@ const { authenticateToken, requireReporter, requireAdmin } = require('../middlew
 const router = express.Router();
 
 // Configure multer for image uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '../uploads/images');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+const storage = multer.memoryStorage(); // Use memory storage for Vercel
 
 const upload = multer({
   storage: storage,
@@ -170,12 +158,21 @@ router.post('/', authenticateToken, upload.array('images', 5), [
     let images = [];
     if (req.files && req.files.length > 0) {
       console.log('Processing images:', req.files.length);
-      images = req.files.map(file => ({
-        url: `/uploads/images/${file.filename}`,
-        caption: req.body[`caption_${file.originalname}`] || '',
-        alt: req.body[`alt_${file.originalname}`] || file.originalname
-      }));
-      console.log('Processed images:', images);
+
+      // For Vercel, we'll store images as base64 data URLs for now
+      // In production, you'd want to use a cloud storage service like AWS S3
+      images = req.files.map((file, index) => {
+        const base64Data = file.buffer.toString('base64');
+        const mimeType = file.mimetype;
+        const dataUrl = `data:${mimeType};base64,${base64Data}`;
+
+        return {
+          url: dataUrl,
+          caption: req.body[`caption_${index}`] || req.body[`caption_${file.originalname}`] || '',
+          alt: req.body[`alt_${index}`] || req.body[`alt_${file.originalname}`] || file.originalname
+        };
+      });
+      console.log('Processed images:', images.length);
     }
 
     const news = new News({
@@ -399,14 +396,16 @@ router.post('/upload-image', authenticateToken, upload.single('image'), async (r
       return res.status(400).json({ error: 'No image file provided' });
     }
 
-    // Create URL for the uploaded image
-    const imageUrl = `/uploads/images/${req.file.filename}`;
+    // For Vercel, return base64 data URL
+    const base64Data = req.file.buffer.toString('base64');
+    const mimeType = req.file.mimetype;
+    const dataUrl = `data:${mimeType};base64,${base64Data}`;
 
     res.json({
       message: 'Image uploaded successfully',
       image: {
-        url: imageUrl,
-        filename: req.file.filename,
+        url: dataUrl,
+        filename: req.file.originalname,
         originalName: req.file.originalname,
         size: req.file.size,
         mimetype: req.file.mimetype
