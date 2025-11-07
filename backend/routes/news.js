@@ -126,7 +126,19 @@ router.post('/', authenticateToken, upload.array('images', 5), [
   body('village').trim().isLength({ min: 1, max: 100 }).withMessage('Village name required'),
   body('location.latitude').optional().isFloat().withMessage('Valid latitude required'),
   body('location.longitude').optional().isFloat().withMessage('Valid longitude required'),
-  body('tags').optional().isArray().withMessage('Tags must be an array')
+  body('tags').optional().custom((value) => {
+    if (value === undefined || value === null) return true;
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) return true;
+      } catch (e) {
+        // fall through
+      }
+    }
+    if (Array.isArray(value)) return true;
+    throw new Error('Tags must be an array');
+  })
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -145,6 +157,16 @@ router.post('/', authenticateToken, upload.array('images', 5), [
       priority = 'medium',
       isBreaking = false
     } = req.body;
+
+    // Parse tags if it's a JSON string
+    let parsedTags = tags;
+    if (typeof tags === 'string') {
+      try {
+        parsedTags = JSON.parse(tags);
+      } catch (e) {
+        parsedTags = [];
+      }
+    }
 
     // Process uploaded images
     let images = [];
@@ -173,7 +195,7 @@ router.post('/', authenticateToken, upload.array('images', 5), [
       authorName: req.user.name,
       location,
       isGeoTagged: !!location,
-      tags,
+      parsedTags,
       images,
       videos,
       priority,
