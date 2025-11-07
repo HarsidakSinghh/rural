@@ -86,8 +86,6 @@ class ApiService {
   }
 
   async submitNews(newsData) {
-    console.log('Submitting news data:', newsData);
-
     const formData = new FormData();
 
     // Add text fields
@@ -103,43 +101,19 @@ class ApiService {
 
     // Add image files
     if (newsData.imageFiles && newsData.imageFiles.length > 0) {
-      console.log('Adding image files:', newsData.imageFiles.length);
       newsData.imageFiles.forEach((file, index) => {
-        console.log(`Adding file ${index}:`, file.name, file.size, file.type);
         formData.append('images', file);
       });
     }
 
-    console.log('FormData contents:');
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value);
-    }
-
-    try {
-      const response = await fetch(`${this.baseURL}/news`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        },
-        body: formData
-      });
-
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
-
-      const result = await response.json();
-      console.log('Success response:', result);
-      return result;
-    } catch (error) {
-      console.error('Submit news error:', error);
-      throw error;
-    }
+    const response = await fetch(`${this.baseURL}/news`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      },
+      body: formData
+    });
+    return this.handleResponse(response);
   }
 
   async updateNews(id, newsData) {

@@ -129,14 +129,8 @@ router.post('/', authenticateToken, upload.array('images', 5), [
   body('tags').optional().isArray().withMessage('Tags must be an array')
 ], async (req, res) => {
   try {
-    console.log('Received news submission request');
-    console.log('Request body:', req.body);
-    console.log('Request files:', req.files);
-    console.log('Request user:', req.user);
-
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      console.log('Validation errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
@@ -152,13 +146,9 @@ router.post('/', authenticateToken, upload.array('images', 5), [
       isBreaking = false
     } = req.body;
 
-    console.log('Parsed data:', { title, content, category, village, location, tags });
-
     // Process uploaded images
     let images = [];
     if (req.files && req.files.length > 0) {
-      console.log('Processing images:', req.files.length);
-
       // For Vercel, we'll store images as base64 data URLs for now
       // In production, you'd want to use a cloud storage service like AWS S3
       images = req.files.map((file, index) => {
@@ -172,7 +162,6 @@ router.post('/', authenticateToken, upload.array('images', 5), [
           alt: req.body[`alt_${index}`] || req.body[`alt_${file.originalname}`] || file.originalname
         };
       });
-      console.log('Processed images:', images.length);
     }
 
     const news = new News({
@@ -192,9 +181,7 @@ router.post('/', authenticateToken, upload.array('images', 5), [
       status: 'pending'
     });
 
-    console.log('Saving news article:', news);
     await news.save();
-    console.log('News saved successfully with ID:', news._id);
 
     // Update user's total submissions (only for database users)
     if (req.user.id && req.user.id !== req.user._id) {
