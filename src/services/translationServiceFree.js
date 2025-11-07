@@ -1,8 +1,8 @@
 // Translation service using free translation APIs
 class TranslationService {
   constructor() {
-    // Using LibreTranslate with proper source language detection
-    this.libreTranslateURL = 'https://libretranslate.com/translate';
+    // Using Lingva.ml - free alternative to Google Translate
+    this.lingvaURL = 'https://lingva.ml/api/v1';
     this.cache = new Map();
   }
 
@@ -13,44 +13,33 @@ class TranslationService {
     return englishPatterns.test(text) && text.length > 0;
   }
 
-  // Primary translation using LibreTranslate
-  async translateWithLibreTranslate(text, targetLanguage, sourceLanguage = 'auto') {
+  // Primary translation using Lingva.ml
+  async translateWithLingva(text, targetLanguage, sourceLanguage = 'auto') {
     try {
       // Determine source language
       const detectedSource = this.isEnglish(text) ? 'en' : sourceLanguage;
 
-      console.log('LibreTranslate request:', {
+      console.log('Lingva.ml request:', {
         text: text.substring(0, 100) + '...',
         source: detectedSource,
         target: targetLanguage
       });
 
-      const response = await fetch(this.libreTranslateURL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          q: text,
-          source: detectedSource,
-          target: targetLanguage,
-          format: 'text'
-        })
-      });
+      const response = await fetch(`${this.lingvaURL}/${detectedSource}/${targetLanguage}/${encodeURIComponent(text)}`);
 
-      console.log('LibreTranslate response status:', response.status);
+      console.log('Lingva.ml response status:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('LibreTranslate error response:', errorText);
-        throw new Error(`LibreTranslate API error: ${response.status}`);
+        console.error('Lingva.ml error response:', errorText);
+        throw new Error(`Lingva.ml API error: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('LibreTranslate response data:', data);
-      return data.translatedText;
+      console.log('Lingva.ml response data:', data);
+      return data.translation;
     } catch (error) {
-      console.warn('LibreTranslate API failed:', error);
+      console.warn('Lingva.ml API failed:', error);
       return null;
     }
   }
@@ -67,10 +56,10 @@ class TranslationService {
     }
 
     try {
-      // Try LibreTranslate
-      let translatedText = await this.translateWithLibreTranslate(text, targetLanguage, sourceLanguage);
+      // Try Lingva.ml
+      let translatedText = await this.translateWithLingva(text, targetLanguage, sourceLanguage);
 
-      // If LibreTranslate fails, use fallback
+      // If Lingva.ml fails, use fallback
       if (!translatedText) {
         translatedText = this.fallbackTranslation(text, targetLanguage);
       }
