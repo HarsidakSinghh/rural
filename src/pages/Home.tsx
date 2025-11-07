@@ -299,104 +299,101 @@ const Home: React.FC = () => {
 
       {/* News List */}
       <div className="news-list">
-        {loading ? (
-          <div className="loading">
-            <div className="loading-spinner" />
-            {t('loading')}
-          </div>
-        ) : isTranslating ? (
-          <div className="loading">
-            <div className="loading-spinner" />
-            Translating content...
-          </div>
-        ) : filteredNews.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon">📰</div>
-            <h3>{t('no_news_found')}</h3>
-            <p>{t('try_different_category')}</p>
-          </div>
-        ) : (
-          <div className="news-grid">
-            {filteredNews.map((article, index) => {
-              const translatedArticle = translatedNews.find(t => t.id === article.id);
-              const displayTitle = translatedArticle?.title || article.title;
-              const displayContent = translatedArticle?.content || article.content;
+  {loading ? (
+    <div className="loading">
+      <div className="loading-spinner" />
+      {t('loading')}
+    </div>
+  ) : isTranslating ? (
+    <div className="loading">
+      <div className="loading-spinner" />
+      Translating content...
+    </div>
+  ) : filteredNews.length === 0 ? (
+    <div className="empty-state">
+      <div className="empty-icon">📰</div>
+      <h3>{t('no_news_found')}</h3>
+      <p>{t('try_different_category')}</p>
+    </div>
+  ) : (
+    <div className="news-grid">
+      {filteredNews.map((article, index) => {
+        const translatedArticle = translatedNews.find(t => t.id === article.id);
+        const displayTitle = translatedArticle?.title || article.title;
+        const displayContent = translatedArticle?.content || article.content;
 
-              return (
-                <Link
-                  key={article.id || index}
-                  to={`/news/${article.id}`}
-                  className={`news-link ${animateCards ? 'animate' : ''}`}
-                  style={{
-                    animationDelay: `${index * 0.1}s`
-                  }}
+        return (
+          <Link
+            key={article.id || index}
+            to={`/news/${article.id}`}
+            className={`news-link ${animateCards ? 'animate' : ''}`}
+            style={{ animationDelay: `${index * 0.1}s` }}
+          >
+            <div className="news-item">
+
+              {/* Category Badge */}
+              <div className="category-badge">
+                <span
+                  className="category-tag"
+                  style={{ background: getCategoryGradient(article.category) }}
                 >
-                  <div className="news-item">
-                    {/* Category Badge */}
-                    <div className="category-badge">
-                      <span
-                        className="category-tag"
-                        style={{
-                          background: getCategoryGradient(article.category)
-                        }}
-                      >
-                        {t(article.category)}
-                      </span>
-                    </div>
+                  {t(article.category)}
+                </span>
+              </div>
 
-                    {/* Geo-tag indicator */}
-                    {article.isGeoTagged && (
-                      <div className="geo-tag">
-                        <MapPin size={12} />
-                        {t('geo_tagged')}
-                      </div>
-                    )}
-
-                    {/* Content */}
-                    <div className="news-content">
-                      <h3 className="news-title">
-                        {displayTitle}
-                      </h3>
-
-                      <p className="news-excerpt">
-                        {displayContent.length > 150
-                          ? `${displayContent.substring(0, 150)}...`
-                          : displayContent
-                        }
-                      </p>
-
-                      {/* Meta Information */}
-                      <div className="news-meta">
-                        <div className="meta-item">
-                          <User size={14} />
-                          <span>{typeof article.author === 'object' && article.author ? article.author.name : article.author}</span>
-                        </div>
-                        <div className="meta-item">
-                          <Calendar size={14} />
-                          <span>{formatDate(article.publishedAt)}</span>
-                        </div>
-                      </div>
-
-                      {/* Footer */}
-                      <div className="news-footer">
-                        <span className="village-name">
-                          📍 {article.village}
-                        </span>
-                        <div className="view-count">
-                          <Eye size={14} />
-                          <span>{article.viewCount}</span>
-                        </div>
-                      </div>
-                  </div>
-
-                  {/* Hover effect overlay */}
-                  <div className="news-hover-overlay" />
+              {/* Geo-tag indicator */}
+              {article.isGeoTagged && (
+                <div className="geo-tag">
+                  <MapPin size={12} />
+                  {t('geo_tagged')}
                 </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
+              )}
+
+              {/* Content */}
+              <div className="news-content">
+                <h3 className="news-title">{displayTitle}</h3>
+                <p className="news-excerpt">
+                  {displayContent.length > 150
+                    ? `${displayContent.substring(0, 150)}...`
+                    : displayContent}
+                </p>
+
+                {/* Meta Information */}
+                <div className="news-meta">
+                  <div className="meta-item">
+                    <User size={14} />
+                    <span>
+                      {typeof article.author === 'object' && article.author
+                        ? article.author.name
+                        : article.author}
+                    </span>
+                  </div>
+                  <div className="meta-item">
+                    <Calendar size={14} />
+                    <span>{formatDate(article.publishedAt)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="news-footer">
+                <span className="village-name">📍 {article.village}</span>
+                <div className="view-count">
+                  <Eye size={14} />
+                  <span>{article.viewCount}</span>
+                </div>
+              </div>
+
+              {/* Hover effect overlay */}
+              <div className="news-hover-overlay" />
+            </div>
+          </Link>
+        );
+      })}
+    </div>
+  )}
+</div>
+
 
       {/* Topics Cloud */}
       {topicFrequencies.length > 0 && (
