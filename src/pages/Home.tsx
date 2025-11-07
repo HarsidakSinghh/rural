@@ -232,11 +232,15 @@ const Home: React.FC = () => {
           <div className="ticker-heading">Top Stories</div>
           <div className="headline-ticker">
             <div className="ticker-content">
-              {(filteredNews.length ? filteredNews : news).slice(0, 10).map((article, i) => (
-                <span key={article.id || i} className="ticker-item">
-                  {translatedNews.length > 0 ? translatedNews.find(t => t.id === article.id)?.title : article.title}
-                </span>
-              ))}
+              {(filteredNews.length ? filteredNews : news).slice(0, 10).map((article, i) => {
+                const translatedArticle = translatedNews.find(t => t.id === article.id);
+                const displayTitle = translatedArticle?.title || article.title;
+                return (
+                  <span key={article.id || i} className="ticker-item">
+                    {displayTitle}
+                  </span>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -313,50 +317,55 @@ const Home: React.FC = () => {
           </div>
         ) : (
           <div className="news-grid">
-            {filteredNews.map((article, index) => (
-              <Link
-                key={article.id || index}
-                to={`/news/${article.id}`}
-                className={`news-link ${animateCards ? 'animate' : ''}`}
-                style={{
-                  animationDelay: `${index * 0.1}s`
-                }}
-              >
-                <div className="news-item">
-                  {/* Category Badge */}
-                  <div className="category-badge">
-                    <span
-                      className="category-tag"
-                      style={{
-                        background: getCategoryGradient(article.category)
-                      }}
-                    >
-                      {t(article.category)}
-                    </span>
-                  </div>
+            {filteredNews.map((article, index) => {
+              const translatedArticle = translatedNews.find(t => t.id === article.id);
+              const displayTitle = translatedArticle?.title || article.title;
+              const displayContent = translatedArticle?.content || article.content;
 
-                  {/* Geo-tag indicator */}
-                  {article.isGeoTagged && (
-                    <div className="geo-tag">
-                      <MapPin size={12} />
-                      {t('geo_tagged')}
+              return (
+                <Link
+                  key={article.id || index}
+                  to={`/news/${article.id}`}
+                  className={`news-link ${animateCards ? 'animate' : ''}`}
+                  style={{
+                    animationDelay: `${index * 0.1}s`
+                  }}
+                >
+                  <div className="news-item">
+                    {/* Category Badge */}
+                    <div className="category-badge">
+                      <span
+                        className="category-tag"
+                        style={{
+                          background: getCategoryGradient(article.category)
+                        }}
+                      >
+                        {t(article.category)}
+                      </span>
                     </div>
-                  )}
 
-                  {/* Content */}
-                  <div className="news-content">
-                    <h3 className="news-title">
-                      {translatedNews.length > 0 ? translatedNews.find(t => t.id === article.id)?.title : article.title}
-                    </h3>
+                    {/* Geo-tag indicator */}
+                    {article.isGeoTagged && (
+                      <div className="geo-tag">
+                        <MapPin size={12} />
+                        {t('geo_tagged')}
+                      </div>
+                    )}
 
-                    <p className="news-excerpt">
-                      {(translatedNews.length > 0 ? translatedNews.find(t => t.id === article.id)?.content : article.content)?.length > 150
-                        ? `${(translatedNews.length > 0 ? translatedNews.find(t => t.id === article.id)?.content : article.content)?.substring(0, 150)}...`
-                        : (translatedNews.length > 0 ? translatedNews.find(t => t.id === article.id)?.content : article.content)
-                      }
-                    </p>
+                    {/* Content */}
+                    <div className="news-content">
+                      <h3 className="news-title">
+                        {displayTitle}
+                      </h3>
 
-                    {/* Meta Information */}
+                      <p className="news-excerpt">
+                        {displayContent.length > 150
+                          ? `${displayContent.substring(0, 150)}...`
+                          : displayContent
+                        }
+                      </p>
+
+                      {/* Meta Information */}
                     <div className="news-meta">
                       <div className="meta-item">
                         <User size={14} />
@@ -417,17 +426,21 @@ const Home: React.FC = () => {
         <div className="most-read">
           <div className="most-read-header">Most Read</div>
           <ol className="most-read-list">
-            {mostRead.map((article, idx) => (
-              <li key={article.id || idx} className="most-read-item">
-                <Link to={`/news/${article.id}`} className="most-read-link">
-                  <span className="most-read-rank">{idx + 1}</span>
-                  <span className="most-read-title">
-                    {translatedNews.length > 0 ? translatedNews.find(t => t.id === article.id)?.title : article.title}
-                  </span>
-                  <span className="most-read-views">{article.viewCount}</span>
-                </Link>
-              </li>
-            ))}
+            {mostRead.map((article, idx) => {
+              const translatedArticle = translatedNews.find(t => t.id === article.id);
+              const displayTitle = translatedArticle?.title || article.title;
+              return (
+                <li key={article.id || idx} className="most-read-item">
+                  <Link to={`/news/${article.id}`} className="most-read-link">
+                    <span className="most-read-rank">{idx + 1}</span>
+                    <span className="most-read-title">
+                      {displayTitle}
+                    </span>
+                    <span className="most-read-views">{article.viewCount}</span>
+                  </Link>
+                </li>
+              );
+            })}
           </ol>
         </div>
       )}
