@@ -38,7 +38,7 @@ The implementation is being monitored by a committee comprising village represen
 
 const NewsDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { t, translateContent, isTranslating } = useLanguage();
+  const { t, translateContent, isTranslating, language } = useLanguage();
   const [article, setArticle] = useState<NewsArticle | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,14 +69,20 @@ const NewsDetail: React.FC = () => {
   // Translate content when language changes
   useEffect(() => {
     const translateArticle = async () => {
-      if (!article) return;
+      if (!article || language === 'en') {
+        setTranslatedTitle(article?.title || '');
+        setTranslatedContent(article?.content || '');
+        return;
+      }
 
       try {
+        console.log('Translating article to:', language);
         const [translatedTitleText, translatedContentText] = await Promise.all([
           translateContent(article.title),
           translateContent(article.content)
         ]);
 
+        console.log('Translation results:', { translatedTitleText, translatedContentText });
         setTranslatedTitle(translatedTitleText);
         setTranslatedContent(translatedContentText);
       } catch (error) {
@@ -88,7 +94,7 @@ const NewsDetail: React.FC = () => {
     };
 
     translateArticle();
-  }, [article, translateContent]);
+  }, [article, language, translateContent]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
