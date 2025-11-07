@@ -26,30 +26,42 @@ class TranslationService {
       });
 
       // Split long text into smaller chunks to avoid URL length limits
-      const maxChunkLength = 500; // Reduced from 1000 for safer URL limits
+      const maxChunkLength = 200; // Even smaller chunks for safety
       if (text.length > maxChunkLength) {
         console.log('Text too long, splitting into chunks');
         const chunks = this.splitTextIntoChunks(text, maxChunkLength);
         console.log(`Split into ${chunks.length} chunks:`, chunks.map(c => c.length + ' chars'));
         const translatedChunks = [];
 
-        for (const chunk of chunks) {
-          console.log('Translating chunk:', chunk.substring(0, 50) + '...');
-          const response = await fetch(`${this.lingvaURL}/${detectedSource}/${targetLanguage}/${encodeURIComponent(chunk)}`);
-          console.log('Lingva.ml response status:', response.status);
+        for (let i = 0; i < chunks.length; i++) {
+          const chunk = chunks[i];
+          console.log(`Translating chunk ${i + 1}/${chunks.length}:`, chunk.substring(0, 50) + '...');
 
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Lingva.ml error response:', errorText);
-            throw new Error(`Lingva.ml API error: ${response.status}`);
+          try {
+            const response = await fetch(`${this.lingvaURL}/${detectedSource}/${targetLanguage}/${encodeURIComponent(chunk)}`);
+            console.log(`Chunk ${i + 1} response status:`, response.status);
+
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error(`Chunk ${i + 1} error response:`, errorText);
+              // Continue with other chunks instead of failing completely
+              console.warn(`Skipping failed chunk ${i + 1}`);
+              continue;
+            }
+
+            const data = await response.json();
+            console.log(`Chunk ${i + 1} response data:`, data);
+            translatedChunks.push(data.translation);
+          } catch (chunkError) {
+            console.error(`Error translating chunk ${i + 1}:`, chunkError);
+            // Continue with other chunks
+            continue;
           }
-
-          const data = await response.json();
-          console.log('Lingva.ml chunk response data:', data);
-          translatedChunks.push(data.translation);
         }
 
-        return translatedChunks.join(' ');
+        const result = translatedChunks.join(' ');
+        console.log('Combined translation result:', result.substring(0, 100) + '...');
+        return result || null;
       } else {
         const response = await fetch(`${this.lingvaURL}/${detectedSource}/${targetLanguage}/${encodeURIComponent(text)}`);
 
@@ -83,15 +95,19 @@ class TranslationService {
       if (end < text.length) {
         const lastPeriod = text.lastIndexOf('.', end);
         const lastNewline = text.lastIndexOf('\n', end);
+        const lastSpace = text.lastIndexOf(' ', end);
 
-        if (lastPeriod > start && lastPeriod > lastNewline) {
+        if (lastPeriod > start && lastPeriod > lastNewline && lastPeriod > lastSpace) {
           end = lastPeriod + 1;
-        } else if (lastNewline > start) {
+        } else if (lastNewline > start && lastNewline > lastSpace) {
           end = lastNewline + 1;
+        } else if (lastSpace > start) {
+          end = lastSpace + 1;
         }
       }
 
-      chunks.push(text.substring(start, end));
+      const chunk = text.substring(start, end);
+      chunks.push(chunk);
       start = end;
     }
 
