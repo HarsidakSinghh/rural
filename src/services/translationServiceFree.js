@@ -103,7 +103,7 @@ class TranslationService {
   fallbackTranslation(text, targetLanguage) {
     // For demo purposes, return the original text with a note
     // In a real app, you might want to implement basic translations or use another service
-    return `${text} [Translated to ${targetLanguage.toUpperCase()}]`;
+    return text; // Return original text without the [Translated to...] suffix
   }
 
   // Get language code mapping
