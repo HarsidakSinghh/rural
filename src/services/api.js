@@ -91,9 +91,11 @@ class ApiService {
     // Add text fields
     Object.keys(newsData).forEach(key => {
       if (key !== 'images' && key !== 'imageFiles') {
-        if (typeof newsData[key] === 'object') {
+        if (key === 'tags' && Array.isArray(newsData[key])) {
           formData.append(key, JSON.stringify(newsData[key]));
-        } else {
+        } else if (typeof newsData[key] === 'object' && key !== 'tags') {
+          formData.append(key, JSON.stringify(newsData[key]));
+        } else if (key !== 'tags') {
           formData.append(key, newsData[key]);
         }
       }
