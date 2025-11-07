@@ -367,18 +367,18 @@ const Home: React.FC = () => {
 
                       {/* Meta Information */}
                       <div className="news-meta">
-                      <div className="meta-item">
-                        <User size={14} />
-                        <span>{typeof article.author === 'object' && article.author ? article.author.name : article.author}</span>
+                        <div className="meta-item">
+                          <User size={14} />
+                          <span>{typeof article.author === 'object' && article.author ? article.author.name : article.author}</span>
+                        </div>
+                        <div className="meta-item">
+                          <Calendar size={14} />
+                          <span>{formatDate(article.publishedAt)}</span>
+                        </div>
                       </div>
-                      <div className="meta-item">
-                        <Calendar size={14} />
-                        <span>{formatDate(article.publishedAt)}</span>
-                      </div>
-                    </div>
 
-                    {/* Footer */}
-                    <div className="news-footer">
+                      {/* Footer */}
+                      <div className="news-footer">
                       <span className="village-name">
                         📍 {article.village}
                       </span>
