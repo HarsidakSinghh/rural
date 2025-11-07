@@ -19,7 +19,6 @@ const SubmitNews: React.FC = () => {
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [images, setImages] = useState<Array<{file: File, preview: string, caption?: string}>>([]);
-  const [uploadingImages, setUploadingImages] = useState(false);
 
   // Auto-fill village from user profile
   useEffect(() => {
