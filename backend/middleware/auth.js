@@ -73,16 +73,21 @@ const authenticateToken = async (req, res, next) => {
 
 
     // Check database user
-    const user = await User.findById(decoded.userId).select('-password');
+    try {
+      const user = await User.findById(decoded.userId).select('-password');
 
-    if (!user || !user.isActive) {
-      return res.status(401).json({ error: 'Invalid or inactive user' });
+      if (!user || !user.isActive) {
+        return res.status(401).json({ error: 'Invalid or inactive user' });
+      }
+
+      req.user = {
+        ...user.toObject(),
+        _id: user._id.toString()
+      };
+    } catch (dbError) {
+      console.error('Database connection error:', dbError);
+      return res.status(500).json({ error: 'Database connection failed' });
     }
-
-    req.user = {
-      ...user.toObject(),
-      _id: user._id.toString()
-    };
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
