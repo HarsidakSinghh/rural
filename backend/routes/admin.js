@@ -13,44 +13,60 @@ router.use(authenticateToken, requireAdmin);
 // Get dashboard statistics
 router.get('/dashboard', async (req, res) => {
   try {
+    // Set timeout for all operations
+    const timeout = 25000; // 25 seconds for Vercel
+
+    // Helper function to run queries with timeout
+    const runWithTimeout = (promise, operationName) => {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error(`${operationName} timed out`)), timeout)
+        )
+      ]);
+    };
+
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
     // Total counts matching AdminStats interface
-    const totalSubmissions = await News.countDocuments();
-    const pendingReviews = await News.countDocuments({ status: 'pending' });
-    const publishedArticles = await News.countDocuments({ status: 'approved' });
-    const rejectedArticles = await News.countDocuments({ status: 'rejected' });
+    const [totalSubmissions, pendingReviews, publishedArticles, rejectedArticles] = await Promise.all([
+      runWithTimeout(News.countDocuments(), 'totalSubmissions'),
+      runWithTimeout(News.countDocuments({ status: 'pending' }), 'pendingReviews'),
+      runWithTimeout(News.countDocuments({ status: 'approved' }), 'publishedArticles'),
+      runWithTimeout(News.countDocuments({ status: 'rejected' }), 'rejectedArticles')
+    ]);
 
     // Total villages (unique villages from submissions)
-    const totalVillages = await News.distinct('village').then(villages => villages.length);
+    const totalVillages = await runWithTimeout(
+      News.distinct('village').then(villages => villages.length),
+      'totalVillages'
+    );
 
     // Active reporters (users with submissions in last 30 days)
-    const activeReporters = await User.countDocuments({
-      lastSubmissionDate: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
-    });
+    const activeReporters = await runWithTimeout(
+      User.countDocuments({
+        lastSubmissionDate: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
+      }),
+      'activeReporters'
+    );
 
     // Monthly statistics
-    const monthlySubmissions = await News.countDocuments({
-      createdAt: { $gte: startOfMonth }
-    });
-    const monthlyPublished = await News.countDocuments({
-      status: 'approved',
-      approvedAt: { $gte: startOfMonth }
-    });
-    const monthlyRejected = await News.countDocuments({
-      status: 'rejected',
-      rejectedAt: { $gte: startOfMonth }
-    });
-    const monthlyViews = await News.aggregate([
-      { $match: { publishedAt: { $gte: startOfMonth } } },
-      { $group: { _id: null, total: { $sum: '$viewCount' } } }
+    const [monthlySubmissions, monthlyPublished, monthlyRejected, monthlyViews, monthlyNewUsers] = await Promise.all([
+      runWithTimeout(News.countDocuments({ createdAt: { $gte: startOfMonth } }), 'monthlySubmissions'),
+      runWithTimeout(News.countDocuments({ status: 'approved', approvedAt: { $gte: startOfMonth } }), 'monthlyPublished'),
+      runWithTimeout(News.countDocuments({ status: 'rejected', rejectedAt: { $gte: startOfMonth } }), 'monthlyRejected'),
+      runWithTimeout(
+        News.aggregate([
+          { $match: { publishedAt: { $gte: startOfMonth } } },
+          { $group: { _id: null, total: { $sum: '$viewCount' } } }
+        ]),
+        'monthlyViews'
+      ),
+      runWithTimeout(User.countDocuments({ createdAt: { $gte: startOfMonth } }), 'monthlyNewUsers')
     ]);
-    const monthlyNewUsers = await User.countDocuments({
-      createdAt: { $gte: startOfMonth }
-    });
 
-    // Daily statistics for last 7 days
+    // Daily statistics for last 7 days (simplified for performance)
     const dailyStats = [];
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
@@ -59,63 +75,101 @@ router.get('/dashboard', async (req, res) => {
       const endOfDay = new Date(startOfDay);
       endOfDay.setDate(endOfDay.getDate() + 1);
 
-      const daySubmissions = await News.countDocuments({
-        createdAt: { $gte: startOfDay, $lt: endOfDay }
-      });
-      const dayPublished = await News.countDocuments({
-        status: 'approved',
-        approvedAt: { $gte: startOfDay, $lt: endOfDay }
-      });
-      const dayViews = await News.aggregate([
-        { $match: { publishedAt: { $gte: startOfDay, $lt: endOfDay } } },
-        { $group: { _id: null, total: { $sum: '$viewCount' } } }
-      ]);
-      const dayActiveUsers = await User.countDocuments({
-        lastActive: { $gte: startOfDay, $lt: endOfDay }
-      });
+      try {
+        const [daySubmissions, dayPublished, dayViews, dayActiveUsers] = await Promise.all([
+          runWithTimeout(News.countDocuments({ createdAt: { $gte: startOfDay, $lt: endOfDay } }), `daySubmissions-${i}`),
+          runWithTimeout(News.countDocuments({ status: 'approved', approvedAt: { $gte: startOfDay, $lt: endOfDay } }), `dayPublished-${i}`),
+          runWithTimeout(
+            News.aggregate([
+              { $match: { publishedAt: { $gte: startOfDay, $lt: endOfDay } } },
+              { $group: { _id: null, total: { $sum: '$viewCount' } } }
+            ]),
+            `dayViews-${i}`
+          ),
+          runWithTimeout(User.countDocuments({ lastActive: { $gte: startOfDay, $lt: endOfDay } }), `dayActiveUsers-${i}`)
+        ]);
 
-      dailyStats.push({
-        date: startOfDay.toISOString().split('T')[0],
-        submissions: daySubmissions,
-        published: dayPublished,
-        views: dayViews[0]?.total || 0,
-        activeUsers: dayActiveUsers
-      });
+        dailyStats.push({
+          date: startOfDay.toISOString().split('T')[0],
+          submissions: daySubmissions,
+          published: dayPublished,
+          views: dayViews[0]?.total || 0,
+          activeUsers: dayActiveUsers
+        });
+      } catch (error) {
+        console.error(`Error fetching daily stats for day ${i}:`, error.message);
+        // Add default values for failed days
+        dailyStats.push({
+          date: startOfDay.toISOString().split('T')[0],
+          submissions: 0,
+          published: 0,
+          views: 0,
+          activeUsers: 0
+        });
+      }
     }
 
-    // Top villages with reporters count
-    const topVillages = await News.aggregate([
-      { $group: {
-        _id: '$village',
-        submissions: { $sum: 1 },
-        published: { $sum: { $cond: [{ $eq: ['$status', 'approved'] }, 1, 0] } },
-        views: { $sum: '$viewCount' }
-      }},
-      { $sort: { submissions: -1 } },
-      { $limit: 5 }
-    ]);
+    // Top villages with reporters count (simplified)
+    let topVillages = [];
+    try {
+      const villagesAgg = await runWithTimeout(
+        News.aggregate([
+          { $group: {
+            _id: '$village',
+            submissions: { $sum: 1 },
+            published: { $sum: { $cond: [{ $eq: ['$status', 'approved'] }, 1, 0] } },
+            views: { $sum: '$viewCount' }
+          }},
+          { $sort: { submissions: -1 } },
+          { $limit: 5 }
+        ]),
+        'topVillages'
+      );
 
-    // Add reporters count for each village
-    for (const village of topVillages) {
-      village.reporters = await User.countDocuments({ village: village._id });
+      // Add reporters count for each village with timeout
+      for (const village of villagesAgg) {
+        try {
+          village.reporters = await runWithTimeout(
+            User.countDocuments({ village: village._id }),
+            `reporters-${village._id}`
+          );
+        } catch (error) {
+          console.error(`Error fetching reporters for ${village._id}:`, error.message);
+          village.reporters = 0;
+        }
+      }
+      topVillages = villagesAgg;
+    } catch (error) {
+      console.error('Error fetching top villages:', error.message);
+      topVillages = [];
     }
 
     // Category breakdown with percentages and views
-    const totalArticles = await News.countDocuments({ status: 'approved' });
-    const categoryBreakdown = await News.aggregate([
-      { $match: { status: 'approved' } },
-      { $group: {
-        _id: '$category',
-        count: { $sum: 1 },
-        views: { $sum: '$viewCount' }
-      }},
-      { $sort: { count: -1 } }
-    ]);
+    let categoryBreakdown = [];
+    try {
+      const totalArticles = await runWithTimeout(News.countDocuments({ status: 'approved' }), 'totalArticles');
+      const categories = await runWithTimeout(
+        News.aggregate([
+          { $match: { status: 'approved' } },
+          { $group: {
+            _id: '$category',
+            count: { $sum: 1 },
+            views: { $sum: '$viewCount' }
+          }},
+          { $sort: { count: -1 } }
+        ]),
+        'categoryBreakdown'
+      );
 
-    // Calculate percentages
-    categoryBreakdown.forEach(cat => {
-      cat.percentage = totalArticles > 0 ? Math.round((cat.count / totalArticles) * 100) : 0;
-    });
+      // Calculate percentages
+      categoryBreakdown = categories.map(cat => ({
+        ...cat,
+        percentage: totalArticles > 0 ? Math.round((cat.count / totalArticles) * 100) : 0
+      }));
+    } catch (error) {
+      console.error('Error fetching category breakdown:', error.message);
+      categoryBreakdown = [];
+    }
 
     res.json({
       totalSubmissions,
