@@ -34,6 +34,19 @@ router.get('/', [
   query('limit').optional().isInt({ min: 1, max: 50 })
 ], async (req, res) => {
   try {
+    // Set timeout for Vercel serverless environment
+    const timeout = 25000; // 25 seconds
+
+    // Helper function to run queries with timeout
+    const runWithTimeout = (promise, operationName) => {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error(`${operationName} timed out`)), timeout)
+        )
+      ]);
+    };
+
     const { category, village, page = 1, limit = 10 } = req.query;
     const skip = (page - 1) * limit;
 
@@ -41,12 +54,22 @@ router.get('/', [
     if (category) filter.category = category;
     if (village) filter.village = new RegExp(village, 'i');
 
-    const news = await News.find(filter)
-      .populate('author', 'name email village')
-      .sort({ publishedAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit))
-      .lean();
+    // Run queries in parallel with timeout protection
+    const [news, total] = await Promise.all([
+      runWithTimeout(
+        News.find(filter)
+          .populate('author', 'name email village')
+          .sort({ publishedAt: -1 })
+          .skip(skip)
+          .limit(parseInt(limit))
+          .lean(),
+        'fetchNews'
+      ),
+      runWithTimeout(
+        News.countDocuments(filter),
+        'countNews'
+      )
+    ]);
 
     // Convert ObjectIds to strings for frontend compatibility
     const serializedNews = news.map(item => ({
@@ -58,8 +81,6 @@ router.get('/', [
         _id: item.author._id ? item.author._id.toString() : ''
       } : item.author
     }));
-
-    const total = await News.countDocuments(filter);
 
     res.json({
       news: serializedNews,
