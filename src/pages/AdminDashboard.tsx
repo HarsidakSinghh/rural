@@ -99,8 +99,19 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleDelete = (id: string) => {
-    setSubmissions(submissions.filter(sub => sub.id !== id));
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this news article? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await apiService.adminDeleteNews(id);
+      setSubmissions(submissions.filter(sub => sub.id !== id));
+      alert('News article deleted successfully');
+    } catch (error) {
+      console.error('Failed to delete news:', error);
+      alert('Failed to delete news article. Please try again.');
+    }
   };
 
   const formatDate = (dateString: string) => {

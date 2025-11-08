@@ -238,6 +238,14 @@ class ApiService {
     return this.handleResponse(response);
   }
 
+  async adminDeleteNews(id) {
+    const response = await fetch(`${this.baseURL}/admin/news/${id}`, {
+      method: 'DELETE',
+      headers: this.getHeaders()
+    });
+    return this.handleResponse(response);
+  }
+
   // User endpoints
   async getUserStats() {
     const response = await fetch(`${this.baseURL}/user/stats`, {

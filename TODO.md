@@ -1,18 +1,9 @@
-# TODO: Add Photo Upload to News Submission and Display
+# TODO: Add Delete Functionality for News by Admin
 
-## Backend Changes
-- [x] Install multer in backend for file upload handling
-- [x] Add image upload endpoint in backend/routes/news.js
-- [x] Update backend/routes/news.js to handle image URLs in news submission
-
-## Frontend Changes
-- [x] Update src/types/index.ts to change imageUrl to images array
-- [x] Add photo upload section in SubmitNews.tsx (similar to audio upload)
-- [x] Update NewsDetail.tsx to display images in the article
-- [x] Update src/services/api.js to add upload method for images
-
-## Testing and Validation
-- [ ] Test image upload functionality
-- [ ] Handle image validation (size, type)
-- [ ] Add image compression if needed
-- [ ] Update any other components that display news previews
+## Tasks
+- [x] Add DELETE route in backend/routes/admin.js to allow admins to delete any news article by ID
+- [x] Add adminDeleteNews method to src/services/api.js for admin-specific delete functionality
+- [x] Update AdminDashboard.tsx to call the API for delete instead of just local state removal
+- [x] Test delete functionality for different news statuses
+- [x] Ensure proper error handling and user feedback
+- [x] Update UI state after successful delete

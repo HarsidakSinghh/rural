@@ -391,6 +391,29 @@ router.put('/users/:id/status', [
   }
 });
 
+// Delete news article (admin only)
+router.delete('/news/:id', async (req, res) => {
+  try {
+    const newsId = req.params.id;
+    console.log('Deleting news with ID:', newsId);
+
+    const news = await News.findById(newsId);
+    if (!news) {
+      console.log('News not found for ID:', newsId);
+      return res.status(404).json({ error: 'News article not found' });
+    }
+
+    // Delete the news article
+    await News.findByIdAndDelete(newsId);
+
+    console.log('News deleted successfully:', newsId);
+    res.json({ message: 'News article deleted successfully' });
+  } catch (error) {
+    console.error('Delete news error:', error);
+    res.status(500).json({ error: 'Failed to delete news article' });
+  }
+});
+
 // Get analytics data
 router.get('/analytics', [
   query('startDate').optional().isISO8601(),
