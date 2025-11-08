@@ -237,7 +237,17 @@ const Home: React.FC = () => {
                 const displayTitle = translatedArticle?.title || article.title;
                 return (
                   <span key={article.id || i} className="ticker-item">
-                    {displayTitle} •
+                    {displayTitle}
+                  </span>
+                );
+              })}
+              {/* Duplicate for seamless loop */}
+              {(filteredNews.length ? filteredNews : news).slice(0, 5).map((article, i) => {
+                const translatedArticle = translatedNews.find(t => t.id === article.id);
+                const displayTitle = translatedArticle?.title || article.title;
+                return (
+                  <span key={`${article.id || i}-dup`} className="ticker-item">
+                    {displayTitle}
                   </span>
                 );
               })}

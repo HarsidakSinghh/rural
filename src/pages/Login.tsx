@@ -105,21 +105,7 @@ const Login: React.FC = () => {
             </button>
           </form>
 
-          <div className="demo-credentials">
-            <h4 className="demo-title">{t('demo_credentials')}</h4>
-            <div className="demo-item">
-              <span className="demo-role">{t('admin')}:</span>
-              <span className="demo-credential">admin / admin123</span>
-            </div>
-            <div className="demo-item">
-              <span className="demo-role">{t('reporter')} (Trusted):</span>
-              <span className="demo-credential">ram.singh / reporter123</span>
-            </div>
-            <div className="demo-item">
-              <span className="demo-role">{t('reporter')} (New):</span>
-              <span className="demo-credential">priya.sharma / reporter123</span>
-            </div>
-          </div>
+
         </div>
       </div>
 
@@ -233,58 +219,7 @@ const Login: React.FC = () => {
           animation: spin 1s linear infinite;
         }
 
-        .demo-credentials {
-          background: var(--background-secondary);
-          border-radius: 16px;
-          padding: 1.5rem;
-          border: 1px solid var(--border-light);
-        }
 
-        .demo-title {
-          font-size: 1.1rem;
-          font-weight: 600;
-          color: var(--text-primary);
-          margin-bottom: 1.25rem;
-          text-align: center;
-          font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-          letter-spacing: -0.01em;
-        }
-
-        .demo-item {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 0.75rem 0;
-          border-bottom: 1px solid var(--border-light);
-          transition: background-color 0.2s ease;
-        }
-
-        .demo-item:hover {
-          background-color: rgba(0,0,0,0.02);
-        }
-
-        .demo-item:last-child {
-          border-bottom: none;
-        }
-
-        .demo-role {
-          font-weight: 600;
-          color: var(--text-primary);
-          font-size: 0.95rem;
-          font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-        }
-
-        .demo-credential {
-          font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-          background: var(--background-primary);
-          padding: 0.375rem 0.75rem;
-          border-radius: 8px;
-          font-size: 0.85rem;
-          color: var(--text-secondary);
-          border: 1px solid var(--border-color);
-          font-weight: 500;
-          letter-spacing: 0.025em;
-        }
 
         @media (max-width: 480px) {
           .login-card {
