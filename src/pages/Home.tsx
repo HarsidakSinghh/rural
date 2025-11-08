@@ -237,7 +237,7 @@ const Home: React.FC = () => {
                 const displayTitle = translatedArticle?.title || article.title;
                 return (
                   <span key={article.id || i} className="ticker-item">
-                    {displayTitle}
+                    {displayTitle} •
                   </span>
                 );
               })}
