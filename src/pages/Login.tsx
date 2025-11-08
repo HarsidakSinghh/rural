@@ -180,17 +180,22 @@ const Login: React.FC = () => {
         }
 
         .login-title {
-          font-size: 2rem;
-          font-weight: 800;
+          font-size: 2.25rem;
+          font-weight: 700;
           color: var(--text-primary);
-          margin-bottom: 0.5rem;
-          letter-spacing: -0.025em;
+          margin-bottom: 0.75rem;
+          letter-spacing: -0.02em;
+          line-height: 1.2;
+          font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
 
         .login-subtitle {
           color: var(--text-secondary);
-          font-size: 1rem;
+          font-size: 1.1rem;
           font-weight: 400;
+          line-height: 1.5;
+          opacity: 0.8;
+          font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
 
         .login-form {
@@ -236,19 +241,26 @@ const Login: React.FC = () => {
         }
 
         .demo-title {
-          font-size: 1rem;
+          font-size: 1.1rem;
           font-weight: 600;
           color: var(--text-primary);
-          margin-bottom: 1rem;
+          margin-bottom: 1.25rem;
           text-align: center;
+          font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+          letter-spacing: -0.01em;
         }
 
         .demo-item {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 0.5rem 0;
+          padding: 0.75rem 0;
           border-bottom: 1px solid var(--border-light);
+          transition: background-color 0.2s ease;
+        }
+
+        .demo-item:hover {
+          background-color: rgba(0,0,0,0.02);
         }
 
         .demo-item:last-child {
@@ -258,17 +270,20 @@ const Login: React.FC = () => {
         .demo-role {
           font-weight: 600;
           color: var(--text-primary);
-          font-size: 0.9rem;
+          font-size: 0.95rem;
+          font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
 
         .demo-credential {
-          font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+          font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
           background: var(--background-primary);
-          padding: 0.25rem 0.5rem;
-          border-radius: 6px;
-          font-size: 0.8rem;
+          padding: 0.375rem 0.75rem;
+          border-radius: 8px;
+          font-size: 0.85rem;
           color: var(--text-secondary);
           border: 1px solid var(--border-color);
+          font-weight: 500;
+          letter-spacing: 0.025em;
         }
 
         @media (max-width: 480px) {

@@ -43,10 +43,9 @@
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
-  animation: marquee 20s linear infinite;
+  animation: marquee 25s linear infinite;
   position: relative;
-  mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+  padding: 0 1rem;
 }
 
 .ticker-content::before,
@@ -812,8 +811,7 @@
   }
 
   .ticker-content {
-    mask-image: none;
-    -webkit-mask-image: none;
+    padding: 0 0.5rem;
   }
 
   .news-grid {

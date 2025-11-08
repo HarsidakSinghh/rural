@@ -275,17 +275,22 @@ const Register: React.FC = () => {
         }
 
         .register-title {
-          font-size: 2rem;
-          font-weight: 800;
+          font-size: 2.25rem;
+          font-weight: 700;
           color: var(--text-primary);
-          margin-bottom: 0.5rem;
-          letter-spacing: -0.025em;
+          margin-bottom: 0.75rem;
+          letter-spacing: -0.02em;
+          line-height: 1.2;
+          font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
 
         .register-subtitle {
           color: var(--text-secondary);
-          font-size: 1rem;
+          font-size: 1.1rem;
           font-weight: 400;
+          line-height: 1.5;
+          opacity: 0.8;
+          font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
 
         .register-form {
@@ -331,41 +336,60 @@ const Register: React.FC = () => {
         }
 
         .benefits-title {
-          font-size: 1rem;
+          font-size: 1.1rem;
           font-weight: 600;
           color: var(--text-primary);
-          margin-bottom: 1rem;
+          margin-bottom: 1.25rem;
           text-align: center;
+          font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+          letter-spacing: -0.01em;
         }
 
         .benefits-list {
           display: flex;
           flex-direction: column;
-          gap: 1rem;
+          gap: 1.25rem;
         }
 
         .benefit-item {
           display: flex;
           align-items: flex-start;
-          gap: 0.75rem;
+          gap: 1rem;
+          padding: 0.75rem;
+          background: rgba(0,0,0,0.02);
+          border-radius: 12px;
+          transition: all 0.2s ease;
+        }
+
+        .benefit-item:hover {
+          background: rgba(0,0,0,0.04);
+          transform: translateY(-1px);
         }
 
         .benefit-icon {
-          font-size: 1.5rem;
+          font-size: 1.75rem;
           flex-shrink: 0;
+          background: var(--gradient-primary);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
         }
 
         .benefit-text strong {
           display: block;
           color: var(--text-primary);
           font-weight: 600;
-          margin-bottom: 0.25rem;
+          margin-bottom: 0.375rem;
+          font-size: 1rem;
+          font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
 
         .benefit-text p {
           color: var(--text-secondary);
-          font-size: 0.9rem;
+          font-size: 0.95rem;
           margin: 0;
+          line-height: 1.5;
+          font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
 
         @media (max-width: 480px) {
