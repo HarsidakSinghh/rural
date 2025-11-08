@@ -43,7 +43,7 @@
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
-  animation: marquee 20s linear infinite;
+  animation: marquee 30s linear infinite;
   position: relative;
 }
 

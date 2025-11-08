@@ -232,7 +232,7 @@ const Home: React.FC = () => {
           <div className="ticker-heading">Top Stories</div>
           <div className="headline-ticker">
             <div className="ticker-content">
-              {(filteredNews.length ? filteredNews : news).slice(0, 10).map((article, i) => {
+              {(filteredNews.length ? filteredNews : news).slice(0, 5).map((article, i) => {
                 const translatedArticle = translatedNews.find(t => t.id === article.id);
                 const displayTitle = translatedArticle?.title || article.title;
                 return (
