@@ -307,13 +307,7 @@ const Home: React.FC = () => {
                 </span>
               </div>
 
-              {/* Geo-tag indicator */}
-              {article.isGeoTagged && (
-                <div className="geo-tag">
-                  <MapPin size={12} />
-                  {t('geo_tagged')}
-                </div>
-              )}
+
 
               {/* Content */}
               <div className="news-content">
@@ -330,8 +324,9 @@ const Home: React.FC = () => {
                     <User size={14} />
                     <span>
                       {typeof article.author === 'object' && article.author
-                        ? article.author.name
-                        : article.author}
+                        ? (article.author.name || 'Unknown Author')
+                        : (typeof article.author === 'string' ? article.author : 'Unknown Author')
+                      }
                     </span>
                   </div>
                   <div className="meta-item">

@@ -77,11 +77,11 @@ router.get('/', [
     let serializedNews = news.map(item => ({
       ...item,
       id: item._id.toString(),
-      author: typeof item.author === 'object' && item.author !== null ? {
+      author: item.authorName || (typeof item.author === 'object' && item.author !== null ? {
         ...item.author,
         id: item.author._id ? item.author._id.toString() : '',
         _id: item.author._id ? item.author._id.toString() : ''
-      } : item.author
+      } : item.author)
     }));
 
     // Translate content if language is specified and different from English
@@ -150,11 +150,11 @@ router.get('/:id', async (req, res) => {
     let serializedNews = {
       ...news.toObject(),
       id: news._id.toString(),
-      author: typeof news.author === 'object' && news.author !== null ? {
+      author: news.authorName || (typeof news.author === 'object' && news.author !== null ? {
         ...news.author,
         id: news.author._id ? news.author._id.toString() : '',
         _id: news.author._id ? news.author._id.toString() : ''
-      } : news.author,
+      } : news.author),
       approvedBy: typeof news.approvedBy === 'object' && news.approvedBy !== null ? {
         ...news.approvedBy,
         id: news.approvedBy._id ? news.approvedBy._id.toString() : '',
