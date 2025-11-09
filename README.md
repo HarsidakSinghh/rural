@@ -1,4 +1,4 @@
-# Gram Samachar - Rural Newsroom Platform
+# GramPulse - Rural Newsroom Platform
 
 A mobile-first, community-driven digital newsroom platform designed for rural communities in India. This platform enables students and village reporters to document, report, and circulate local news, issues, cultural stories, and government schemes from neighboring villages.
 
@@ -220,4 +220,4 @@ For support and questions:
 
 ---
 
-**Gram Samachar** - Empowering rural voices through digital journalism 🏘️📰
+**GramPulse** - Empowering rural voices through digital journalism 🏘️📰

@@ -438,7 +438,7 @@ const Home: React.FC = () => {
           <Link to="/privacy" className="footer-link">Privacy</Link>
           <Link to="/terms" className="footer-link">Terms</Link>
         </div>
-        <div className="footer-meta">© {new Date().getFullYear()} Gram Samachar</div>
+        <div className="footer-meta">© {new Date().getFullYear()} GramPulse</div>
       </footer>
 
       {/* Submit News CTA */}

@@ -164,7 +164,12 @@ const NewsDetail: React.FC = () => {
             <div className="article-meta">
               <div className="meta-item">
                 <User size={16} />
-                <span>{typeof article.author === 'object' && article.author ? article.author.name : article.author}</span>
+                <span>
+                  {typeof article.author === 'object' && article.author
+                    ? (article.author.name || 'Unknown Author')
+                    : (typeof article.author === 'string' ? article.author : 'Unknown Author')
+                  }
+                </span>
               </div>
               <div className="meta-item">
                 <Calendar size={16} />

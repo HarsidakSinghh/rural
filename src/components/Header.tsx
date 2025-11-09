@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContextFree';
 import { useAuth } from '../contexts/AuthContext';
-import { Globe, User, Video, Shield, LogIn, UserPlus, Moon, Sun } from 'lucide-react';
+import { Globe, User, Video, Shield, LogIn, UserPlus, Moon, Sun, Menu, X } from 'lucide-react';
 
 const Header: React.FC = () => {
   const { language, setLanguage, t } = useLanguage();
@@ -10,6 +10,7 @@ const Header: React.FC = () => {
   const location = useLocation();
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isDarkMode, setIsDarkMode] = React.useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   // Handle scroll effect
   React.useEffect(() => {
@@ -115,14 +116,14 @@ const Header: React.FC = () => {
     <header className={`header ${isScrolled ? 'scrolled' : ''}`}>
       <div className="header-content">
         <Link to="/" className="logo">
-          {language === 'hi' ? 'ग्राम समाचार' : 
-           language === 'pa' ? 'ਪਿੰਡ ਸਮਾਚਾਰ' : 
-           'Gram Samachar'}
+          {language === 'hi' ? 'ग्रामपल्स' :
+           language === 'pa' ? 'ਗ੍ਰਾਮਪਲਸ' :
+           'GramPulse'}
         </Link>
         
         <div className="header-actions">
           {/* Desktop Navigation */}
-          <nav className="nav-links">
+          <nav className="nav-links desktop-nav">
             {renderNavigation()}
             {isAuthenticated && (
               <button
@@ -150,7 +151,36 @@ const Header: React.FC = () => {
             <Globe size={16} />
             <span>{getLanguageLabel()}</span>
           </button>
+
+          {/* Mobile Menu Toggle */}
+          <button
+            className="mobile-menu-toggle"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            title="Menu"
+          >
+            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
+
+        {/* Mobile Navigation Menu */}
+        {isMobileMenuOpen && (
+          <nav className="mobile-nav">
+            <div className="mobile-nav-content">
+              {renderNavigation()}
+              {isAuthenticated && (
+                <button
+                  onClick={() => {
+                    logout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="btn btn-danger mobile-logout"
+                >
+                  {t('logout')}
+                </button>
+              )}
+            </div>
+          </nav>
+        )}
       </div>
 
 
@@ -159,3 +189,95 @@ const Header: React.FC = () => {
 };
 
 export default Header;
+
+// Mobile Navigation Styles
+const mobileNavStyles = `
+  .mobile-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+
+  .mobile-menu-toggle:hover {
+    background: var(--background-secondary);
+  }
+
+  .mobile-nav {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--background-primary);
+    border-top: 1px solid var(--border-light);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+  }
+
+  .mobile-nav-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+  }
+
+  .mobile-nav .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: var(--text-primary);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+  }
+
+  .mobile-nav .nav-link:hover,
+  .mobile-nav .nav-link.active {
+    background: var(--primary-color);
+    color: white;
+  }
+
+  .mobile-nav .nav-link svg {
+    flex-shrink: 0;
+  }
+
+  .mobile-logout {
+    margin-top: 0.5rem;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  @media (max-width: 768px) {
+    .desktop-nav {
+      display: none;
+    }
+
+    .mobile-menu-toggle {
+      display: block;
+    }
+
+    .theme-toggle,
+    .language-toggle {
+      display: none;
+    }
+  }
+
+  @media (min-width: 769px) {
+    .mobile-nav {
+      display: none !important;
+    }
+  }
+`;
+
+// Inject styles
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = mobileNavStyles;
+  document.head.appendChild(styleSheet);
+}
