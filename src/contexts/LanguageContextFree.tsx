@@ -404,8 +404,8 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     setIsTranslating(true);
     try {
-      const targetLang = translationService.getLanguageCode(language);
-      const translatedText = await translationService.translateText(text, targetLang);
+      // Use backend API for translation instead of client-side
+      const translatedText = await translationService.translateText(text, language);
       return translatedText;
     } catch (error) {
       console.error('Translation error:', error);

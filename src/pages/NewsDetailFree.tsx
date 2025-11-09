@@ -51,7 +51,7 @@ const NewsDetail: React.FC = () => {
 
       try {
         setLoading(true);
-        const response = await apiService.getNewsById(id);
+        const response = await apiService.getNewsById(id, language !== 'en' ? language : undefined);
         setArticle(response);
       } catch (error) {
         console.error('Failed to fetch article:', error);
@@ -64,37 +64,15 @@ const NewsDetail: React.FC = () => {
     };
 
     fetchArticle();
-  }, [id]);
+  }, [id, language]);
 
-  // Translate content when language changes
+  // Remove client-side translation since we're now using backend translation
   useEffect(() => {
-    const translateArticle = async () => {
-      if (!article || language === 'en') {
-        setTranslatedTitle(article?.title || '');
-        setTranslatedContent(article?.content || '');
-        return;
-      }
-
-      try {
-        console.log('Translating article to:', language);
-        const [translatedTitleText, translatedContentText] = await Promise.all([
-          translateContent(article.title),
-          translateContent(article.content)
-        ]);
-
-        console.log('Translation results:', { translatedTitleText, translatedContentText });
-        setTranslatedTitle(translatedTitleText);
-        setTranslatedContent(translatedContentText);
-      } catch (error) {
-        console.error('Translation error:', error);
-        // Fallback to original content
-        setTranslatedTitle(article.title);
-        setTranslatedContent(article.content);
-      }
-    };
-
-    translateArticle();
-  }, [article, language, translateContent]);
+    if (article) {
+      setTranslatedTitle(article.title);
+      setTranslatedContent(article.content);
+    }
+  }, [article]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -178,10 +156,10 @@ const NewsDetail: React.FC = () => {
                   {t('geo_tagged')}
                 </span>
               )}
-              {isTranslating && (
-                <span className="translating-badge">
+              {article.translated && (
+                <span className="translated-badge">
                   <Languages size={14} />
-                  Translating...
+                  Translated
                 </span>
               )}
             </div>
@@ -357,24 +335,18 @@ const NewsDetail: React.FC = () => {
           backdrop-filter: blur(10px);
         }
 
-        .translating-badge {
+        .translated-badge {
           display: flex;
           align-items: center;
           gap: 0.3rem;
-          color: var(--accent-color);
+          color: var(--success-color, #10b981);
           font-size: 0.8rem;
           font-weight: 600;
           padding: 0.4rem 0.8rem;
-          background: rgba(245, 158, 11, 0.1);
+          background: rgba(16, 185, 129, 0.1);
           border-radius: 16px;
-          border: 1px solid rgba(245, 158, 11, 0.2);
+          border: 1px solid rgba(16, 185, 129, 0.2);
           backdrop-filter: blur(10px);
-          animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
         }
 
         .article-title {

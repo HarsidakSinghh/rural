@@ -108,7 +108,8 @@ const Home: React.FC = () => {
     const fetchNews = async () => {
       try {
         setLoading(true);
-        const response = await apiService.getNews();
+        const filters = language !== 'en' ? { lang: language } : {};
+        const response = await apiService.getNews(filters);
         setNews(response.news || []);
       } catch (error) {
         console.error('Failed to fetch news:', error);
@@ -123,43 +124,13 @@ const Home: React.FC = () => {
     };
 
     fetchNews();
-  }, []);
+  }, [language]);
 
-  // Translate news when language changes
+  // Remove client-side translation since we're now using backend translation
   useEffect(() => {
-    const translateNews = async () => {
-      if (language === 'en' || news.length === 0) {
-        setTranslatedNews([]);
-        return;
-      }
-
-      setIsTranslating(true);
-      try {
-        const translated = await Promise.all(
-          news.map(async (article) => {
-            const [translatedTitle, translatedContent] = await Promise.all([
-              translateContent(article.title),
-              translateContent(article.content)
-            ]);
-
-            return {
-              ...article,
-              title: translatedTitle,
-              content: translatedContent
-            };
-          })
-        );
-        setTranslatedNews(translated);
-      } catch (error) {
-        console.error('Translation error:', error);
-        setTranslatedNews([]);
-      } finally {
-        setIsTranslating(false);
-      }
-    };
-
-    translateNews();
-  }, [language, news, translateContent]);
+    setTranslatedNews([]);
+    setIsTranslating(false);
+  }, [language]);
 
   // Filter news when category changes
   useEffect(() => {

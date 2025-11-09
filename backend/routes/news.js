@@ -6,6 +6,7 @@ const fs = require('fs');
 const News = require('../models/News');
 const User = require('../models/User');
 const { authenticateToken, requireReporter, requireAdmin } = require('../middleware/auth');
+const translationService = require('../services/translationService');
 
 const router = express.Router();
 
@@ -31,7 +32,8 @@ router.get('/', [
   query('category').optional().isIn(['agriculture', 'education', 'health', 'infrastructure', 'scheme', 'event', 'other']),
   query('village').optional().trim(),
   query('page').optional().isInt({ min: 1 }),
-  query('limit').optional().isInt({ min: 1, max: 50 })
+  query('limit').optional().isInt({ min: 1, max: 50 }),
+  query('lang').optional().isIn(['en', 'hi', 'pa']) // Add language parameter
 ], async (req, res) => {
   try {
     // Set timeout for Vercel serverless environment
@@ -47,7 +49,7 @@ router.get('/', [
       ]);
     };
 
-    const { category, village, page = 1, limit = 10 } = req.query;
+    const { category, village, page = 1, limit = 10, lang = 'en' } = req.query;
     const skip = (page - 1) * limit;
 
     const filter = { status: 'published' };
@@ -72,7 +74,7 @@ router.get('/', [
     ]);
 
     // Convert ObjectIds to strings for frontend compatibility
-    const serializedNews = news.map(item => ({
+    let serializedNews = news.map(item => ({
       ...item,
       id: item._id.toString(),
       author: typeof item.author === 'object' && item.author !== null ? {
@@ -81,6 +83,32 @@ router.get('/', [
         _id: item.author._id ? item.author._id.toString() : ''
       } : item.author
     }));
+
+    // Translate content if language is specified and different from English
+    if (lang && lang !== 'en') {
+      try {
+        console.log('Translating news list to:', lang);
+        // Translate titles in batch for better performance
+        const titles = serializedNews.map(item => item.title);
+        const translatedTitles = await translationService.translateBatch(titles, lang, 'en');
+
+        // Update titles with translations
+        serializedNews = serializedNews.map((item, index) => ({
+          ...item,
+          title: translatedTitles[index] || item.title,
+          translated: true,
+          originalLanguage: 'en',
+          targetLanguage: lang
+        }));
+      } catch (translationError) {
+        console.error('Translation error for news list:', translationError);
+        // Continue with original content if translation fails
+        serializedNews = serializedNews.map(item => ({
+          ...item,
+          translated: false
+        }));
+      }
+    }
 
     res.json({
       news: serializedNews,
@@ -102,7 +130,8 @@ router.get('/', [
 router.get('/:id', async (req, res) => {
   try {
     const newsId = req.params.id;
-    console.log('Fetching news with ID:', newsId);
+    const { lang } = req.query; // Get language parameter
+    console.log('Fetching news with ID:', newsId, 'Language:', lang);
 
     const news = await News.findById(newsId)
       .populate('author', 'name email village')
@@ -118,8 +147,7 @@ router.get('/:id', async (req, res) => {
       console.error('Failed to increment view count:', error);
     });
 
-    // Convert ObjectIds to strings for frontend compatibility
-    const serializedNews = {
+    let serializedNews = {
       ...news.toObject(),
       id: news._id.toString(),
       author: typeof news.author === 'object' && news.author !== null ? {
@@ -133,6 +161,27 @@ router.get('/:id', async (req, res) => {
         _id: news.approvedBy._id ? news.approvedBy._id.toString() : ''
       } : news.approvedBy
     };
+
+    // Translate content if language is specified and different from English
+    if (lang && lang !== 'en') {
+      try {
+        console.log('Translating content to:', lang);
+        const [translatedTitle, translatedContent] = await Promise.all([
+          translationService.translateText(serializedNews.title, lang, 'en'),
+          translationService.translateText(serializedNews.content, lang, 'en')
+        ]);
+
+        serializedNews.title = translatedTitle;
+        serializedNews.content = translatedContent;
+        serializedNews.translated = true;
+        serializedNews.originalLanguage = 'en';
+        serializedNews.targetLanguage = lang;
+      } catch (translationError) {
+        console.error('Translation error:', translationError);
+        // Continue with original content if translation fails
+        serializedNews.translated = false;
+      }
+    }
 
     res.json(serializedNews);
   } catch (error) {
