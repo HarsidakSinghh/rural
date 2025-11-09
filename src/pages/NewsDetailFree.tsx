@@ -38,12 +38,11 @@ The implementation is being monitored by a committee comprising village represen
 
 const NewsDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { t, translateContent, isTranslating, language } = useLanguage();
+  const { t, language } = useLanguage();
   const [article, setArticle] = useState<NewsArticle | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [translatedTitle, setTranslatedTitle] = useState<string>('');
-  const [translatedContent, setTranslatedContent] = useState<string>('');
+
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -66,13 +65,7 @@ const NewsDetail: React.FC = () => {
     fetchArticle();
   }, [id, language]);
 
-  // Remove client-side translation since we're now using backend translation
-  useEffect(() => {
-    if (article) {
-      setTranslatedTitle(article.title);
-      setTranslatedContent(article.content);
-    }
-  }, [article]);
+
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -165,7 +158,7 @@ const NewsDetail: React.FC = () => {
             </div>
 
             <h1 className="article-title">
-              {translatedTitle || article.title}
+              {article.title}
             </h1>
 
             <div className="article-meta">
@@ -206,7 +199,7 @@ const NewsDetail: React.FC = () => {
           )}
 
           <div className="article-content">
-            {(translatedContent || article.content).split('\n\n').map((paragraph, index) => (
+            {article.content.split('\n\n').map((paragraph, index) => (
               <p key={index} className="content-paragraph">
                 {paragraph}
               </p>

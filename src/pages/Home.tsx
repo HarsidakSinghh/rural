@@ -77,13 +77,12 @@ const mockNews: NewsArticle[] = [
 ];
 
 const Home: React.FC = () => {
-  const { t, language, translateContent } = useLanguage();
+  const { t, language } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<NewsCategory | 'all'>('all');
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [animateCards, setAnimateCards] = useState(false);
-  const [translatedNews, setTranslatedNews] = useState<NewsArticle[]>([]);
-  const [isTranslating, setIsTranslating] = useState(false);
+
 
   const categories: Array<{ value: NewsCategory | 'all'; label: string; icon: React.ReactNode }> = [
     { value: 'all', label: t('latest_news'), icon: <TrendingUp size={18} /> },
@@ -100,8 +99,8 @@ const Home: React.FC = () => {
   ];
 
   const filteredNews = selectedCategory === 'all'
-    ? (translatedNews.length > 0 ? translatedNews : news)
-    : (translatedNews.length > 0 ? translatedNews : news).filter(article => article.category === selectedCategory);
+    ? news
+    : news.filter(article => article.category === selectedCategory);
 
   // Fetch news from backend
   useEffect(() => {
@@ -126,11 +125,7 @@ const Home: React.FC = () => {
     fetchNews();
   }, [language]);
 
-  // Remove client-side translation since we're now using backend translation
-  useEffect(() => {
-    setTranslatedNews([]);
-    setIsTranslating(false);
-  }, [language]);
+
 
   // Filter news when category changes
   useEffect(() => {
@@ -204,21 +199,17 @@ const Home: React.FC = () => {
           <div className="headline-ticker">
             <div className="ticker-content">
               {(filteredNews.length ? filteredNews : news).slice(0, 5).map((article, i) => {
-                const translatedArticle = translatedNews.find(t => t.id === article.id);
-                const displayTitle = translatedArticle?.title || article.title;
                 return (
                   <span key={article.id || i} className="ticker-item">
-                    {displayTitle}
+                    {article.title}
                   </span>
                 );
               })}
               {/* Duplicate for seamless loop */}
               {(filteredNews.length ? filteredNews : news).slice(0, 5).map((article, i) => {
-                const translatedArticle = translatedNews.find(t => t.id === article.id);
-                const displayTitle = translatedArticle?.title || article.title;
                 return (
                   <span key={`${article.id || i}-dup`} className="ticker-item">
-                    {displayTitle}
+                    {article.title}
                   </span>
                 );
               })}
@@ -285,11 +276,6 @@ const Home: React.FC = () => {
       <div className="loading-spinner" />
       {t('loading')}
     </div>
-  ) : isTranslating ? (
-    <div className="loading">
-      <div className="loading-spinner" />
-      Translating content...
-    </div>
   ) : filteredNews.length === 0 ? (
     <div className="empty-state">
       <div className="empty-icon">📰</div>
@@ -299,9 +285,8 @@ const Home: React.FC = () => {
   ) : (
     <div className="news-grid">
       {filteredNews.map((article, index) => {
-        const translatedArticle = translatedNews.find(t => t.id === article.id);
-        const displayTitle = translatedArticle?.title || article.title;
-        const displayContent = translatedArticle?.content || article.content;
+        const displayTitle = article.title;
+        const displayContent = article.content;
 
         return (
           <Link
@@ -405,14 +390,12 @@ const Home: React.FC = () => {
           <div className="most-read-header">Most Read</div>
           <ol className="most-read-list">
             {mostRead.map((article, idx) => {
-              const translatedArticle = translatedNews.find(t => t.id === article.id);
-              const displayTitle = translatedArticle?.title || article.title;
               return (
                 <li key={article.id || idx} className="most-read-item">
                   <Link to={`/news/${article.id}`} className="most-read-link">
                     <span className="most-read-rank">{idx + 1}</span>
                     <span className="most-read-title">
-                      {displayTitle}
+                      {article.title}
                     </span>
                     <span className="most-read-views">{article.viewCount}</span>
                   </Link>
