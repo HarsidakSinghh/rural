@@ -152,7 +152,7 @@ const NewsDetail: React.FC = () => {
               {article.translated && (
                 <span className="translated-badge">
                   <Languages size={14} />
-                  Translated
+                  {t('translated')}
                 </span>
               )}
             </div>

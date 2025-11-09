@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import translationService from '../services/translationServiceFree';
 
 export type Language = 'en' | 'hi' | 'pa';
 
@@ -8,7 +7,6 @@ interface LanguageContextType {
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
   translateContent: (text: string) => Promise<string>;
-  isTranslating: boolean;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -138,6 +136,20 @@ const translations = {
     'phone_number': 'Phone Number',
     'send_sms': 'Send SMS',
     'call_ivr': 'Call IVR Number',
+
+    // Home page sections
+    'top_stories': 'Top Stories',
+    'safe_verified': 'Safe & Verified',
+    'zero_tolerance': 'Zero tolerance on spam',
+    'trending_topics': 'Trending Topics',
+    'from_the_desk': 'From the Desk',
+    'grassroots_stories': 'Grassroots stories shape better decisions. Explore developments, issues, and culture from villages across the region—reported by the community.',
+    'most_read': 'Most Read',
+    'regional_highlights': 'Regional Highlights',
+    'weekly_brief': 'Weekly Brief',
+    'newsletter_sub': 'Top stories and rural insights in your inbox.',
+    'subscribe': 'Subscribe',
+    'translated': 'Translated',
   },
   hi: {
     // Navigation
@@ -262,6 +274,20 @@ const translations = {
     'phone_number': 'फोन नंबर',
     'send_sms': 'एसएमएस भेजें',
     'call_ivr': 'आईवीआर नंबर पर कॉल करें',
+
+    // Home page sections
+    'top_stories': 'शीर्ष समाचार',
+    'safe_verified': 'सुरक्षित और सत्यापित',
+    'zero_tolerance': 'स्पैम के प्रति शून्य सहिष्णुता',
+    'trending_topics': 'ट्रेंडिंग विषय',
+    'from_the_desk': 'डेस्क से',
+    'grassroots_stories': 'ग्रासरूट कहानियां बेहतर निर्णय लेती हैं। क्षेत्र के गांवों से विकास, मुद्दों और संस्कृति का पता लगाएं—समुदाय द्वारा रिपोर्ट किया गया।',
+    'most_read': 'सबसे ज्यादा पढ़ा गया',
+    'regional_highlights': 'क्षेत्रीय हाइलाइट्स',
+    'weekly_brief': 'साप्ताहिक संक्षिप्त',
+    'newsletter_sub': 'शीर्ष समाचार और ग्रामीण अंतर्दृष्टि आपके इनबॉक्स में।',
+    'subscribe': 'सब्स्क्राइब करें',
+    'translated': 'अनुवादित',
   },
   pa: {
     // Navigation
@@ -386,12 +412,25 @@ const translations = {
     'phone_number': 'ਫੋਨ ਨੰਬਰ',
     'send_sms': 'ਐਸਐਮਐਸ ਭੇਜੋ',
     'call_ivr': 'ਆਈਵੀਆਰ ਨੰਬਰ ਤੇ ਕਾਲ ਕਰੋ',
+
+    // Home page sections
+    'top_stories': 'ਸਿਖਰਲੇ ਸਮਾਚਾਰ',
+    'safe_verified': 'ਸੁਰੱਖਿਅਤ ਅਤੇ ਤਸਦੀਕ ਕੀਤਾ',
+    'zero_tolerance': 'ਸਪੈਮ ਦੇ ਪ੍ਰਤੀ ਸਿਫ਼ਰ ਸਹਿਣਸ਼ੀਲਤਾ',
+    'trending_topics': 'ਟ੍ਰੈਂਡਿੰਗ ਵਿਸ਼ੇ',
+    'from_the_desk': 'ਡੈਸਕ ਤੋਂ',
+    'grassroots_stories': 'ਗ੍ਰਾਸਰੂਟ ਕਹਾਣੀਆਂ ਵਧੀਆ ਫੈਸਲੇ ਲੈਂਦੀਆਂ ਹਨ। ਖੇਤਰ ਦੇ ਪਿੰਡਾਂ ਤੋਂ ਵਿਕਾਸ, ਮੁੱਦਿਆਂ ਅਤੇ ਸੱਭਿਆਚਾਰ ਦਾ ਪਤਾ ਲਗਾਓ—ਸਮੁਦਾਇ ਦੁਆਰਾ ਰਿਪੋਰਟ ਕੀਤਾ ਗਿਆ।',
+    'most_read': 'ਸਭ ਤੋਂ ਵੱਧ ਪੜ੍ਹਿਆ ਗਿਆ',
+    'regional_highlights': 'ਖੇਤਰੀ ਹਾਈਲਾਈਟਸ',
+    'weekly_brief': 'ਹਫ਼ਤਾਵਾਰੀ ਸੰਖੇਪ',
+    'newsletter_sub': 'ਸਿਖਰਲੇ ਸਮਾਚਾਰ ਅਤੇ ਪਿੰਡੀ ਗਿਆਨ ਤੁਹਾਡੇ ਇਨਬਾਕਸ ਵਿੱਚ।',
+    'subscribe': 'ਸਬਸਕ੍ਰਾਈਬ ਕਰੋ',
+    'translated': 'ਅਨੁਵਾਦਿਤ',
   }
 };
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('en');
-  const [isTranslating, setIsTranslating] = useState(false);
 
   const t = (key: string): string => {
     return translations[language][key as keyof typeof translations[typeof language]] ||
@@ -400,19 +439,9 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   const translateContent = async (text: string): Promise<string> => {
-    if (language === 'en') return text; // No translation needed for English
-
-    setIsTranslating(true);
-    try {
-      // Use backend API for translation instead of client-side
-      const translatedText = await translationService.translateText(text, language);
-      return translatedText;
-    } catch (error) {
-      console.error('Translation error:', error);
-      return text; // Return original text on error
-    } finally {
-      setIsTranslating(false);
-    }
+    // Translation is now handled by the backend API
+    // This function is kept for compatibility but no longer used
+    return text;
   };
 
   return (
@@ -420,8 +449,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       language,
       setLanguage,
       t,
-      translateContent,
-      isTranslating
+      translateContent
     }}>
       {children}
     </LanguageContext.Provider>

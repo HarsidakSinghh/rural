@@ -195,7 +195,7 @@ const Home: React.FC = () => {
       {/* Top Strip: Headlines ticker and quick stats */}
       <div className="top-strip">
         <div className="ticker-row">
-          <div className="ticker-heading">Top Stories</div>
+          <div className="ticker-heading">{t('top_stories')}</div>
           <div className="headline-ticker">
             <div className="ticker-content">
               {(filteredNews.length ? filteredNews : news).slice(0, 5).map((article, i) => {
@@ -242,8 +242,8 @@ const Home: React.FC = () => {
         <div className="stat-card">
           <div className="stat-icon">🔒</div>
           <div className="stat-text">
-            <div className="stat-title">Safe & Verified</div>
-            <div className="stat-sub">Zero tolerance on spam</div>
+            <div className="stat-title">{t('safe_verified')}</div>
+            <div className="stat-sub">{t('zero_tolerance')}</div>
           </div>
         </div>
       </div>
@@ -364,7 +364,7 @@ const Home: React.FC = () => {
       {/* Topics Cloud */}
       {topicFrequencies.length > 0 && (
         <div className="topics-cloud">
-          <div className="topics-header">Trending Topics</div>
+          <div className="topics-header">{t('trending_topics')}</div>
           <div className="topics-list">
             {topicFrequencies.map(([topic, count]) => (
               <span key={topic} className="topic-chip">
@@ -377,17 +377,16 @@ const Home: React.FC = () => {
 
       {/* Editorial Note */}
       <div className="editorial-note">
-        <div className="editorial-title">From the Desk</div>
+        <div className="editorial-title">{t('from_the_desk')}</div>
         <p className="editorial-text">
-          Grassroots stories shape better decisions. Explore developments, issues, and culture from
-          villages across the region—reported by the community.
+          {t('grassroots_stories')}
         </p>
       </div>
 
       {/* Most Read */}
       {mostRead.length > 0 && (
         <div className="most-read">
-          <div className="most-read-header">Most Read</div>
+          <div className="most-read-header">{t('most_read')}</div>
           <ol className="most-read-list">
             {mostRead.map((article, idx) => {
               return (
@@ -409,7 +408,7 @@ const Home: React.FC = () => {
       {/* Regional Highlights */}
       {villageStats.length > 0 && (
         <div className="regional-highlights">
-          <div className="regional-header">Regional Highlights</div>
+          <div className="regional-header">{t('regional_highlights')}</div>
           <div className="regional-list">
             {villageStats.map(([village, count]) => (
               <span key={village} className="region-chip">
@@ -423,11 +422,11 @@ const Home: React.FC = () => {
 
       {/* Newsletter CTA (non-functional) */}
       <div className="newsletter-card">
-        <div className="newsletter-title">Weekly Brief</div>
-        <div className="newsletter-sub">Top stories and rural insights in your inbox.</div>
+        <div className="newsletter-title">{t('weekly_brief')}</div>
+        <div className="newsletter-sub">{t('newsletter_sub')}</div>
         <div className="newsletter-actions">
           <input className="newsletter-input" placeholder="your@email" />
-          <button className="btn btn-secondary">Subscribe</button>
+          <button className="btn btn-secondary">{t('subscribe')}</button>
         </div>
       </div>
 
