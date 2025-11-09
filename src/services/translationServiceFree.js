@@ -25,90 +25,74 @@ class TranslationService {
         target: targetLanguage
       });
 
-      // Split long text into smaller chunks to avoid URL length limits
-      const maxChunkLength = 200; // Even smaller chunks for safety
-      if (text.length > maxChunkLength) {
-        console.log('Text too long, splitting into chunks');
-        const chunks = this.splitTextIntoChunks(text, maxChunkLength);
-        console.log(`Split into ${chunks.length} chunks:`, chunks.map(c => c.length + ' chars'));
+      // Split text into paragraphs first, then translate each paragraph
+      const paragraphs = text.split('\n\n').filter(p => p.trim().length > 0);
+      console.log(`Split into ${paragraphs.length} paragraphs`);
+
+      const translatedParagraphs = [];
+
+      for (let i = 0; i < paragraphs.length; i++) {
+        const paragraph = paragraphs[i].trim();
+        console.log(`Translating paragraph ${i + 1}/${paragraphs.length}:`, paragraph.substring(0, 50) + '...');
+
+        // Split paragraph into 15-word chunks
+        const wordChunks = this.splitTextIntoWordChunks(paragraph, 15);
+        console.log(`Paragraph ${i + 1} split into ${wordChunks.length} word chunks`);
+
         const translatedChunks = [];
 
-        for (let i = 0; i < chunks.length; i++) {
-          const chunk = chunks[i];
-          console.log(`Translating chunk ${i + 1}/${chunks.length}:`, chunk.substring(0, 50) + '...');
+        for (let j = 0; j < wordChunks.length; j++) {
+          const chunk = wordChunks[j];
+          console.log(`Translating chunk ${j + 1}/${wordChunks.length}:`, chunk.substring(0, 30) + '...');
 
           try {
             const response = await fetch(`${this.lingvaURL}/${detectedSource}/${targetLanguage}/${encodeURIComponent(chunk)}`);
-            console.log(`Chunk ${i + 1} response status:`, response.status);
+            console.log(`Chunk ${j + 1} response status:`, response.status);
 
             if (!response.ok) {
               const errorText = await response.text();
-              console.error(`Chunk ${i + 1} error response:`, errorText);
-              // Continue with other chunks instead of failing completely
-              console.warn(`Skipping failed chunk ${i + 1}`);
+              console.error(`Chunk ${j + 1} error response:`, errorText);
+              // Preserve original text instead of skipping
+              console.warn(`Using original text for failed chunk ${j + 1}`);
+              translatedChunks.push(chunk);
               continue;
             }
 
             const data = await response.json();
-            console.log(`Chunk ${i + 1} response data:`, data);
+            console.log(`Chunk ${j + 1} response data:`, data);
             translatedChunks.push(data.translation);
           } catch (chunkError) {
-            console.error(`Error translating chunk ${i + 1}:`, chunkError);
-            // Continue with other chunks
+            console.error(`Error translating chunk ${j + 1}:`, chunkError);
+            // Preserve original text instead of skipping
+            console.warn(`Using original text for failed chunk ${j + 1}`);
+            translatedChunks.push(chunk);
             continue;
           }
         }
 
-        const result = translatedChunks.join(' ');
-        console.log('Combined translation result:', result.substring(0, 100) + '...');
-        return result || null;
-      } else {
-        const response = await fetch(`${this.lingvaURL}/${detectedSource}/${targetLanguage}/${encodeURIComponent(text)}`);
-
-        console.log('Lingva.ml response status:', response.status);
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Lingva.ml error response:', errorText);
-          throw new Error(`Lingva.ml API error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log('Lingva.ml response data:', data);
-        return data.translation;
+        // Join translated chunks back into paragraph
+        const translatedParagraph = translatedChunks.join(' ');
+        translatedParagraphs.push(translatedParagraph);
       }
+
+      // Join paragraphs back with double newlines
+      const result = translatedParagraphs.join('\n\n');
+      console.log('Combined translation result:', result.substring(0, 100) + '...');
+      return result;
     } catch (error) {
       console.warn('Lingva.ml API failed:', error);
       return null;
     }
   }
 
-  // Helper method to split text into chunks
-  splitTextIntoChunks(text, maxLength) {
+  // Helper method to split text into word chunks
+  splitTextIntoWordChunks(text, wordsPerChunk) {
+    const words = text.split(/\s+/).filter(word => word.length > 0);
     const chunks = [];
-    let start = 0;
 
-    while (start < text.length) {
-      let end = start + maxLength;
-
-      // Try to break at sentence boundaries
-      if (end < text.length) {
-        const lastPeriod = text.lastIndexOf('.', end);
-        const lastNewline = text.lastIndexOf('\n', end);
-        const lastSpace = text.lastIndexOf(' ', end);
-
-        if (lastPeriod > start && lastPeriod > lastNewline && lastPeriod > lastSpace) {
-          end = lastPeriod + 1;
-        } else if (lastNewline > start && lastNewline > lastSpace) {
-          end = lastNewline + 1;
-        } else if (lastSpace > start) {
-          end = lastSpace + 1;
-        }
-      }
-
-      const chunk = text.substring(start, end);
+    for (let i = 0; i < words.length; i += wordsPerChunk) {
+      const chunk = words.slice(i, i + wordsPerChunk).join(' ');
       chunks.push(chunk);
-      start = end;
     }
 
     return chunks;
@@ -129,8 +113,9 @@ class TranslationService {
       // Try Lingva.ml
       let translatedText = await this.translateWithLingva(text, targetLanguage, sourceLanguage);
 
-      // If Lingva.ml fails, use fallback
+      // If Lingva.ml fails completely, use fallback
       if (!translatedText) {
+        console.warn('Lingva.ml failed completely, using fallback');
         translatedText = this.fallbackTranslation(text, targetLanguage);
       }
 
@@ -158,7 +143,7 @@ class TranslationService {
     const languageMap = {
       'en': 'en',
       'hi': 'hi',
-      'pa': 'pa' // Punjabi
+      'pa': 'pa' // Punjabi - Lingva.ml may not support this, will fallback to original
     };
     return languageMap[language] || 'en';
   }

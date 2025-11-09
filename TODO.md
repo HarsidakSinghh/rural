@@ -1,9 +1,9 @@
-# TODO: Add Delete Functionality for News by Admin
+# TODO: Fix Translation Issues - Line-by-Line Translation
 
 ## Tasks
-- [x] Add DELETE route in backend/routes/admin.js to allow admins to delete any news article by ID
-- [x] Add adminDeleteNews method to src/services/api.js for admin-specific delete functionality
-- [x] Update AdminDashboard.tsx to call the API for delete instead of just local state removal
-- [x] Test delete functionality for different news statuses
-- [x] Ensure proper error handling and user feedback
-- [x] Update UI state after successful delete
+- [x] Modify translationServiceFree.js to translate content line-by-line (paragraphs) with 15-word chunks
+- [x] Ensure failed chunks preserve original text instead of being skipped
+- [ ] Test Hindi translation to verify only first line issue is fixed
+- [ ] Test Punjabi translation to ensure content is translated (not remaining in English)
+- [x] Verify paragraph structure (\n\n) is maintained after translation
+- [x] Update chunking logic to split by words instead of characters
