@@ -77,7 +77,7 @@ class ApiService {
     return this.handleResponse(response);
   }
 
-  async getNewsById(id, lang = null) {
+  async getNewsById(id, lang = undefined) {
     const queryParams = lang ? `?lang=${lang}` : '';
     const response = await fetch(`${this.baseURL}/news/${id}${queryParams}`, {
       headers: this.getHeaders()
