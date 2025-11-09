@@ -21,6 +21,9 @@ export interface NewsArticle {
   tags: string[];
   viewCount: number;
   isGeoTagged: boolean;
+  translated?: boolean;
+  originalLanguage?: string;
+  targetLanguage?: string;
 }
 
 export type NewsCategory = 'news' | 'scheme' | 'culture' | 'issue' | 'event' | 'agriculture' | 'education' | 'health' | 'infrastructure' | 'other';
