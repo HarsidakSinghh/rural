@@ -59,7 +59,7 @@ class TranslationService {
                   content: chunk
                 }
               ],
-              model: 'llama3-8b-8192', // Using Groq's Llama model
+              model: 'llama-3.1-8b-instant', // Using Groq's updated Llama model
               temperature: 0.1, // Low temperature for consistent translations
               max_tokens: 1024,
               top_p: 1,
